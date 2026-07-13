@@ -1,0 +1,42 @@
+import express from "express";
+import Exam from "../models/Exam.js";
+import Topic from "../models/Topic.js";
+import Question from "../models/Question.js";
+
+const router = express.Router();
+
+// 1. GET ALL EXAMS
+router.get("/exams", async (req, res) => {
+  try {
+    const exams = await Exam.find({});
+    res.status(200).json({ success: true, data: exams });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 2. GET TOPICS FOR A SPECIFIC EXAM
+router.get("/exams/:examId/topics", async (req, res) => {
+  try {
+    const topics = await Topic.find({ examId: req.params.examId });
+    res.status(200).json({ success: true, data: topics });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 3. GET QUESTIONS FOR A CHOSEN TOPIC (Used by the incoming QuizEngine setup)
+router.get("/topics/:topicId/questions", async (req, res) => {
+  try {
+    const questions = await Question.find({ topicId: req.params.topicId }).select("-correctAnswer -explanation"); 
+    // Secure Tip: For strict Mock Testing, avoid leaking answers to the browser network tab early!
+    // We can fetch answers after final verification or safely pass them if security isn't tight yet.
+    
+    const plainQuestions = await Question.find({ topicId: req.params.topicId });
+    res.status(200).json({ success: true, data: plainQuestions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+export default router;

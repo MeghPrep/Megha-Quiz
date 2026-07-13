@@ -1,4 +1,5 @@
 import recruitments from "../model/recruitments.js";
+import authorities from "../model/authorities.js";
 
 export const createRecruitment = async (req, res) => {
   try {
@@ -43,12 +44,32 @@ export const createRecruitment = async (req, res) => {
 
 export const getRecruitments = async (req, res) => {
   try {
-    const recruitmentList = await recruitments
-      .find()
-      .populate("authority")
-      .sort({
-        advertisementYear: -1,
+    const { authorityId } = req.query; // Intercepts ?authorityId=gad from the URL query string
+    let filter = {};
+
+    if (authorityId) {
+      // 1. Look up the authority document using its string slug field (e.g., id: "gad")
+      const authorityObj = await authorities.findOne({
+        id: authorityId.toLowerCase(),
       });
+
+      if (authorityObj) {
+        // 2. Map the filter using the primary MongoDB ObjectId found
+        filter = { authority: authorityObj._id };
+      } else {
+        // If an invalid authority identifier string is passed, return empty right away
+        return res.status(200).json({
+          success: true,
+          recruitment: [],
+        });
+      }
+    }
+
+    // 3. Query your recruitments using the dynamic filter condition
+    const recruitmentList = await recruitments
+      .find(filter)
+      .populate("authority")
+      .sort({ advertisementYear: -1 });
 
     return res.status(200).json({
       success: true,

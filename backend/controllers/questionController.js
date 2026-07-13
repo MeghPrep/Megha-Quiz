@@ -1,5 +1,6 @@
 import papers from "../model/papers.js";
-import question from "../model/question.js";
+// 🛠️ FIX 1: Aligned the model variable name to 'questions' to prevent 'ReferenceError: questions is not defined'
+import questions from "../model/question.js";
 
 export const createQuestion = async (req, res) => {
   try {
@@ -57,9 +58,18 @@ export const createQuestion = async (req, res) => {
 
 export const getQuestions = async (req, res) => {
   try {
-    const questionList = await questions.find().populate("paper").sort({
-      questionNumber: 1,
-    });
+    // 🛠️ FIX 2: Intercept ?paperId=XYZ parameter from the frontend URL query string
+    const { paperId } = req.query;
+    let filter = {};
+
+    if (paperId) {
+      filter = { paper: paperId };
+    }
+
+    const questionList = await questions
+      .find(filter) // 🔍 Only finds questions belonging to the clicked past paper
+      .populate("paper")
+      .sort({ questionNumber: 1 }); // Keeps questions ordered perfectly (Q1, Q2, Q3...)
 
     return res.status(200).json({
       success: true,
@@ -67,7 +77,6 @@ export const getQuestions = async (req, res) => {
     });
   } catch (error) {
     console.error("Error getting questions:", error);
-
     return res.status(500).json({
       success: false,
       message: "Server Error",
@@ -78,21 +87,20 @@ export const getQuestions = async (req, res) => {
 export const getQuestionById = async (req, res) => {
   try {
     const { id } = req.params;
-    const question = await questions.findById(id).populate("paper");
-    if (!question) {
+    const questionItem = await questions.findById(id).populate("paper");
+    if (!questionItem) {
       return res.status(404).json({
         success: false,
-        message: "Paper not found",
+        message: "Question not found", // Fixed error message label
       });
     }
 
     return res.status(200).json({
       success: true,
-      question,
+      question: questionItem,
     });
   } catch (error) {
     console.error("Get Question Error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Server Error",
@@ -103,7 +111,6 @@ export const getQuestionById = async (req, res) => {
 export const updateQuestion = async (req, res) => {
   try {
     const { id } = req.params;
-
     const {
       paper,
       questionNumber,
@@ -151,7 +158,6 @@ export const updateQuestion = async (req, res) => {
     });
   } catch (error) {
     console.error("Update Question Error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Server Error",
@@ -162,9 +168,9 @@ export const updateQuestion = async (req, res) => {
 export const deleteQuestion = async (req, res) => {
   try {
     const { id } = req.params;
-    const question = await questions.findByIdAndDelete(id);
+    const questionItem = await questions.findByIdAndDelete(id);
 
-    if (!question) {
+    if (!questionItem) {
       return res.status(404).json({
         success: false,
         message: "Question Not Found",

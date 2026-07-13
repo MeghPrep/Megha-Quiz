@@ -59,9 +59,18 @@ export const createPaper = async (req, res) => {
 
 export const getPapers = async (req, res) => {
   try {
-    const paperList = await papers.find().populate("recruitment").sort({
-      examDate: -1,
-    });
+    const { recruitmentId } = req.query; // 🚀 Intercepts ?recruitmentId=ID from frontend query string
+    let filter = {};
+
+    // If a recruitmentId exists, restrict the database query search to that specific parent key
+    if (recruitmentId) {
+      filter = { recruitment: recruitmentId };
+    }
+
+    const paperList = await papers
+      .find(filter) // 🔍 Applies the conditional filter object
+      .populate("recruitment")
+      .sort({ examDate: -1 });
 
     return res.status(200).json({
       success: true,
