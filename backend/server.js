@@ -19,7 +19,8 @@ const PORT = 3000;
 /* MIDDLEWARE */
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    // ✅ FIX: Pass origins as clean string elements inside a plain array (No curly braces!)
+    origin: ["http://localhost:5173", "https://megha-quiz.vercel.app"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

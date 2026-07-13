@@ -7,7 +7,7 @@ export const AppContextProvider = (props) => {
   const backendUrl =
     window.location.hostname === "localhost"
       ? "http://localhost:3000"
-      : "https://megha-quiz-react.onrender.com";
+      : "https://megha-quiz-87mn.vercel.app";
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(false);
