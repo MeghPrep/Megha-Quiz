@@ -43,6 +43,14 @@ app.get("/", (req, res) => {
   res.json({ message: "API WORKING" });
 });
 
-app.listen(PORT, () => {
-  console.log(`server started on http://localhost:${PORT}`);
-});
+// 🛠️ FIX 1: Turn off persistent port listening when running in production cloud environments
+// Vercel manages ports automatically; leaving app.listen active can freeze or crash serverless tasks.
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`server started locally on http://localhost:${PORT}`);
+  });
+}
+
+// ⚠️ CRITICAL FIX 2: You MUST export 'app' at the absolute bottom
+// This lets Vercel's node compiler hook your Express routes straight into their cloud handler!
+export default app;
