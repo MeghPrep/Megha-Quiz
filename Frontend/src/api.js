@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API_BASE_URL =
-  "http://localhost:3000 || https://megha-quiz-87mn.vercel.app";
+  "http://localhost:3000 || https://megha-quiz.vercel.app";
 
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
