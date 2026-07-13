@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom'; // 🌟 1. Added routing imports
-import { Menu, X } from 'lucide-react'; // 🌟 2. Added responsive icons
+import { Link, NavLink, useNavigate } from 'react-router-dom'; // 🌟 Added useNavigate
+import { Menu, X } from 'lucide-react'; 
+import { useAuth, useClerk } from "@clerk/clerk-react"; // 🌟 Import Clerk hooks
 import SearchBox from './SearchBox';
 
 const Navbar = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const navigate = useNavigate();
+  const { signOut } = useClerk(); // 🌟 Clerk sign out handler
+  const { isSignedIn } = useAuth(); // 🌟 Live sync with Clerk session status
   
-  // 🌟 3. State to control the mobile hamburger drawer open/close
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Computed layout state matching Clerk session
+  const isLoggedIn = !!isSignedIn;
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -23,7 +28,19 @@ const Navbar = () => {
 
   const handleNavigation = (path) => {
     setCurrentPath(path);
-    setIsMenuOpen(false); // Auto-close drawer on link navigation
+    setIsMenuOpen(false); 
+  };
+
+  // 🌟 Handles clearing session out from Clerk securely
+  const handleLogoutHandler = async (e) => {
+    e.preventDefault();
+    setIsMenuOpen(false);
+    try {
+      await signOut();
+      navigate("/"); // Send user back home after logout
+    } catch (error) {
+      console.error("Clerk Sign Out error:", error);
+    }
   };
 
   return (
@@ -35,12 +52,12 @@ const Navbar = () => {
           <Link to="/" onClick={() => handleNavigation('/')}>Megha Quiz</Link>
         </div>
 
-        {/* 🌟 CORTANA MOBILE ICON / PC SEARCH CONTAINER */}
+        {/* CORTANA MOBILE ICON / PC SEARCH CONTAINER */}
         <div className="navbar-search-container">
           <SearchBox />
         </div>
 
-        {/* 🌟 HAMBURGER BUTTON (Hidden on Desktop, Visible on Mobile) */}
+        {/* HAMBURGER BUTTON */}
         <button 
           className="navbar-hamburger" 
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -49,7 +66,7 @@ const Navbar = () => {
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
-        {/* 🌟 WRAPPER: Handles hiding/showing the menu on small screens */}
+        {/* WRAPPER: Handles hiding/showing the menu on small screens */}
         <div className={`navbar-menu-wrapper ${isMenuOpen ? "active" : ""}`}>
           <ul className="nav-links">
             <li><NavLink to="/" onClick={() => handleNavigation('/')}>Home</NavLink></li>
@@ -63,7 +80,10 @@ const Navbar = () => {
 
           <div className="nav-buttons">
             {isLoggedIn ? (
-              <Link to="/logout" className='btn btn-outline' onClick={() => setIsMenuOpen(false)}>Logout</Link>
+              /* 🌟 Updated to trigger Clerk's sign out pipeline handler */
+              <button className='btn btn-outline' onClick={handleLogoutHandler} style={{ cursor: 'pointer' }}>
+                Logout
+              </button>
             ) : (
               <>
                 <Link to="/login" className='btn btn-outline' onClick={() => setIsMenuOpen(false)}>Login</Link>

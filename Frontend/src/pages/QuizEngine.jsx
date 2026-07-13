@@ -4,8 +4,10 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { Info, FileText, Video, CheckCircle2, XCircle } from "lucide-react";
 import { AppContext } from "../context/AppContext.jsx";
+import { useUser } from "@clerk/clerk-react"; // 🌟 ADD THIS
 
 const QuizEngine = () => {
+  const { user, isLoaded } = useUser(); 
   const navigate = useNavigate();
   const location = useLocation();
   const { backendUrl, userData } = useContext(AppContext);
@@ -242,10 +244,11 @@ const QuizEngine = () => {
             <div className="sidebar-header">
               <h2>Question Palette</h2>
             </div>
-
             <div className="candidate-info">
               <h3>Candidate</h3>
-              <p id="candidateName">{userData?.name || "Guest User"}</p>
+              <p id="candidateName">
+                {!isLoaded ? "Loading..." : user?.fullName || "Guest User"}
+              </p>
             </div>
 
             <div className="question-summary">
