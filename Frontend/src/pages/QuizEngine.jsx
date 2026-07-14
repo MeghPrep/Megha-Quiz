@@ -2,12 +2,20 @@ import React, { useState, useEffect, useContext, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Info, FileText, Video, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Info,
+  FileText,
+  Video,
+  CheckCircle2,
+  XCircle,
+  Badge,
+} from "lucide-react";
 import { AppContext } from "../context/AppContext.jsx";
-import { useUser } from "@clerk/clerk-react"; // 🌟 ADD THIS
+import { useUser } from "@clerk/clerk-react";
+import QuizSummary from "./QuizSummary.jsx"; // 🌟 Import your premium summary layout page component
 
 const QuizEngine = () => {
-  const { user, isLoaded } = useUser(); 
+  const { user, isLoaded } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const { backendUrl, userData } = useContext(AppContext);
@@ -27,25 +35,36 @@ const QuizEngine = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({});
   const [bookmarks, setBookmarks] = useState([]);
-  const [timeRemaining, setTimeRemaining] = useState(3600);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [paperDetails, setPaperDetails] = useState(null);
   const [showResultsSection, setShowResultsSection] = useState(false);
+
+  // 🌟 Expanded summary stats dictionary state to hold premium parameters cleanly
   const [resultsData, setResultsData] = useState({
     total: 0,
     correct: 0,
     wrong: 0,
+    skipped: 0,
     accuracy: "0%",
+    score: 0,
+    totalMarks: 0,
+    timeTakenString: "0 mins 0 secs",
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [activeTooltipId, setActiveTooltipId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const timerIntervalRef = useRef(null);
+  const startTimeRef = useRef(Date.now()); // Tracks precisely when the quiz loaded
 
   // ==========================================================================
   // FETCH QUESTIONS LIVE FROM MONGODB ATLAS
   // ==========================================================================
+  // ==========================================================================
+  // FETCH QUESTIONS & PAPER DETAILS LIVE FROM MONGODB ATLAS
+  // ==========================================================================
   useEffect(() => {
-    const fetchLiveQuestions = async () => {
+    const fetchExamModuleData = async () => {
       if (!paperId) {
         toast.error("Invalid Exam Paper reference pointer.");
         navigate("/practice");
@@ -54,24 +73,47 @@ const QuizEngine = () => {
 
       setIsLoading(true);
       try {
-        const targetUrl =
+        const questionsUrl =
           `${backendUrl}/api/question?paperId=${paperId}`.replace(
             /([^:]\/)\/+/g,
             "$1",
           );
 
-        const response = await axios.get(targetUrl, { withCredentials: true });
+        // 🌟 Look up the specific paper details dynamically
+        const paperUrl = `${backendUrl}/api/paper/${paperId}`.replace(
+          /([^:]\/)\/+/g,
+          "$1",
+        );
+
+        // Execute both database operations concurrently
+        const [questionsRes, paperRes] = await Promise.all([
+          axios.get(questionsUrl, { withCredentials: true }),
+          axios.get(paperUrl, { withCredentials: true }).catch(() => null), // Failsafe fallback
+        ]);
 
         if (
-          response.data.success &&
-          response.data.questions &&
-          response.data.questions.length > 0
+          questionsRes.data.success &&
+          questionsRes.data.questions &&
+          questionsRes.data.questions.length > 0
         ) {
-          setQuestions(response.data.questions);
+          setQuestions(questionsRes.data.questions);
         } else {
           toast.warning("This exam paper has no questions uploaded yet.");
           navigate("/practice");
           return;
+        }
+
+        // 🌟 Process Paper Configuration (Dynamic Allowed Time Limit)
+        if (paperRes && paperRes.data.success && paperRes.data.paper) {
+          const paperMeta = paperRes.data.paper;
+          setPaperDetails(paperMeta); // Make sure 'const [paperDetails, setPaperDetails] = useState(null);' is defined at the top of your component!
+
+          // Convert database minutes integer (e.g., 150) straight to countdown seconds
+          const totalSecondsAllowed = (paperMeta.timeAllowed || 60) * 60;
+          setTimeRemaining(totalSecondsAllowed);
+        } else {
+          // Default baseline fallback if the paper document config fetch misses
+          setTimeRemaining(3600);
         }
 
         document.title = isMockMode()
@@ -82,6 +124,8 @@ const QuizEngine = () => {
         const cachedBookmarks = localStorage.getItem(`bookmarks_${paperId}`);
         if (cachedAnswers) setUserAnswers(JSON.parse(cachedAnswers));
         if (cachedBookmarks) setBookmarks(JSON.parse(cachedBookmarks));
+
+        startTimeRef.current = Date.now(); // Start precision timer counter
       } catch (err) {
         console.error("API Retrieval Failure:", err);
         toast.error("Failed to connect to fullstack database clusters.");
@@ -91,17 +135,18 @@ const QuizEngine = () => {
       }
     };
 
-    fetchLiveQuestions();
+    fetchExamModuleData();
   }, [backendUrl, paperId, quizMode, navigate]);
 
   // COUNTDOWN TEST CLOCK CONTROLLER (MOCK EXCLUSIVE)
   // ==========================================================================
   useEffect(() => {
+    // 🌟 Wait until timeRemaining is populated from the database before starting the clock ticker loop
     if (
-      !isMockMode() ||
       questions.length === 0 ||
       showResultsSection ||
-      isLoading
+      isLoading ||
+      timeRemaining <= 0
     )
       return;
 
@@ -120,7 +165,7 @@ const QuizEngine = () => {
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [questions, showResultsSection, userAnswers, isLoading]);
+  }, [questions, showResultsSection, userAnswers, isLoading, timeRemaining]);
 
   const formatTimer = () => {
     const hours = Math.floor(timeRemaining / 3600);
@@ -194,15 +239,31 @@ const QuizEngine = () => {
     const attempted = correct + wrong;
     const accuracy = attempted ? Math.round((correct / attempted) * 100) : 0;
 
+    // Calculate precision time duration spent on test execution session
+    const timeSpentMs = Date.now() - startTimeRef.current;
+    const totalSecsSpent = Math.floor(timeSpentMs / 1000);
+    const spentMins = Math.floor(totalSecsSpent / 60);
+    const spentSecs = totalSecsSpent % 60;
+
+    const finalScoreCalculated = correct * 2; // 2 Marks per item reference
+    const maxPossibleMarks = questions.length * 2;
+
     setResultsData({
       total: questions.length,
       correct,
       wrong,
+      skipped: unanswered,
       accuracy: `${accuracy}%`,
+      score: finalScoreCalculated,
+      totalMarks: maxPossibleMarks,
+      timeTakenString: `${spentMins} mins ${spentSecs} secs`,
     });
 
     setIsSubmitted(true);
     setShowResultsSection(true);
+
+    // Clean browser performance local storage cache keys upon clean submit actions
+    localStorage.removeItem(`userAnswers_${paperId}`);
 
     try {
       const targetUrl = `${backendUrl}/api/quiz/leaderboard/submit`.replace(
@@ -214,7 +275,7 @@ const QuizEngine = () => {
         {
           userId: userData?._id || "guest",
           paperId,
-          score: correct,
+          score: finalScoreCalculated,
           totalQuestions: questions.length,
           accuracy,
         },
@@ -231,338 +292,342 @@ const QuizEngine = () => {
       <div className="quiz-loading-container">Loading engine modules...</div>
     );
 
+  // 🌟 INTERCEPT MOUNT: If user hits submit, cleanly skip standard questions block and switch viewport focus to premium results component!
+  if (isSubmitted) {
+    return (
+      <QuizSummary
+        quizMode={quizMode}
+        evaluationMetrics={resultsData}
+        questionsRawList={questions}
+        submittedAnswers={userAnswers}
+      />
+    );
+  }
+
   const activeQuestion = questions[currentQuestionIndex];
   const activeUserSelection = userAnswers[activeQuestion?._id];
   const isQuestionBookmarked = bookmarks.includes(activeQuestion?._id);
 
   return (
     <div className="quiz-engine-page-wrapper">
-      {!isSubmitted ? (
-        <main className="practice-layout" id="quizLayout">
-          {/* PALETTE NAVIGATION SIDEBAR */}
-          <aside className="question-sidebar" id="questionSidebar">
-            <div className="sidebar-header">
-              <h2>Question Palette</h2>
+      <main className="practice-layout" id="quizLayout">
+        {/* PALETTE NAVIGATION SIDEBAR */}
+        <aside className="question-sidebar" id="questionSidebar">
+          <div className="sidebar-header">
+            <h2>Question Palette</h2>
+          </div>
+          <div className="candidate-info">
+            <h3>Candidate</h3>
+            <p id="candidateName">
+              {!isLoaded ? "Loading..." : user?.fullName || "Guest User"}
+            </p>
+          </div>
+
+          <div className="question-summary">
+            <div className="summary-item">
+              <span id="answeredCount" className="summary-count">
+                {Object.keys(userAnswers).length}
+              </span>
+              <span>Answered</span>
             </div>
-            <div className="candidate-info">
-              <h3>Candidate</h3>
-              <p id="candidateName">
-                {!isLoaded ? "Loading..." : user?.fullName || "Guest User"}
-              </p>
+            <div className="summary-item">
+              <span id="unansweredCount" className="summary-count">
+                {questions.length - Object.keys(userAnswers).length}
+              </span>
+              <span>Unanswered</span>
+            </div>
+            <div className="summary-item">
+              <span id="bookmarkCount" className="summary-count">
+                {bookmarks.length}
+              </span>
+              <span>Bookmarked</span>
+            </div>
+          </div>
+
+          <div id="questionPalette" className="question-palette">
+            {questions.map((q, i) => {
+              let btnClass = "question-number";
+              if (i === currentQuestionIndex) btnClass += " current";
+              if (userAnswers[q._id] !== undefined) btnClass += " attempted";
+
+              return (
+                <button
+                  key={q._id}
+                  type="button"
+                  className={btnClass}
+                  onClick={() => setCurrentQuestionIndex(i)}
+                >
+                  {i + 1}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="palette-legend">
+            <div>
+              <span className="legend-box unanswered"></span>Unanswered
+            </div>
+            <div>
+              <span className="legend-box attempted"></span>Answered
+            </div>
+            <div>
+              <span className="legend-box current-view"></span>Current
+            </div>
+          </div>
+
+          <button
+            id="submitPracticeBtn"
+            className="submit-practice-btn"
+            onClick={handleSubmitPractice}
+          >
+            {isMockMode() ? "Submit Test" : "Submit Practice"}
+          </button>
+        </aside>
+
+        {/* EXAM CORE CARD PLATFORM */}
+        <section className="quiz-section">
+          <header className="exam-header">
+            <div className="quiz-info">
+              <span id="questionCounter">
+                Question {currentQuestionIndex + 1} of {questions.length}
+              </span>
             </div>
 
-            <div className="question-summary">
-              <div className="summary-item">
-                <span id="answeredCount" className="summary-count">
-                  {Object.keys(userAnswers).length}
+            {timeRemaining > 0 && (
+              <div id="timerContainer" className="timer-container">
+                <span className="timer-label">Time</span>
+                <span
+                  id="timer"
+                  style={{ fontFamily: "monospace", fontWeight: "bold" }}
+                >
+                  {formatTimer()}
                 </span>
-                <span>Answered</span>
               </div>
-              <div className="summary-item">
-                <span id="unansweredCount" className="summary-count">
-                  {questions.length - Object.keys(userAnswers).length}
-                </span>
-                <span>Unanswered</span>
-              </div>
-              <div className="summary-item">
-                <span id="bookmarkCount" className="summary-count">
-                  {bookmarks.length}
-                </span>
-                <span>Bookmarked</span>
-              </div>
-            </div>
+            )}
+          </header>
 
-            <div id="questionPalette" className="question-palette">
-              {questions.map((q, i) => {
-                let btnClass = "question-number";
-                if (i === currentQuestionIndex) btnClass += " current";
-                // ✅ Evaluates using the MongoDB _id key to apply colors to the answered palette nodes
-                if (userAnswers[q._id] !== undefined) btnClass += " attempted";
+          <div className="question-status">
+            Status:{" "}
+            <strong id="questionStatus">
+              {activeUserSelection !== undefined ? "Answered" : "Not Attempted"}
+            </strong>
+          </div>
 
-                return (
-                  <button
-                    key={q._id}
-                    type="button"
-                    className={btnClass}
-                    onClick={() => setCurrentQuestionIndex(i)}
-                  >
-                    {i + 1}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="palette-legend">
-              <div>
-                <span className="legend-box unanswered"></span>Unanswered
+          <article className="question-card">
+            {activeQuestion?.sectionTitle && (
+              <div
+                className="section-title-badge"
+                style={{
+                  backgroundColor: "#eff6ff",
+                  color: "#1e40af",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  display: "inline-block",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  marginBottom: "12px",
+                }}
+              >
+                📚 Section: {activeQuestion.sectionTitle}
               </div>
-              <div>
-                <span className="legend-box attempted"></span>Answered
-              </div>
-              <div>
-                <span className="legend-box current-view"></span>Current
-              </div>
-            </div>
-
-            <button
-              id="submitPracticeBtn"
-              className="submit-practice-btn"
-              onClick={handleSubmitPractice}
-            >
-              {isMockMode() ? "Submit Test" : "Submit Practice"}
-            </button>
-          </aside>
-
-          {/* EXAM CORE CARD PLATFORM */}
-          <section className="quiz-section">
-            <header className="exam-header">
-              <div className="quiz-info">
-                <span id="questionCounter">
-                  Question {currentQuestionIndex + 1} of {questions.length}
-                </span>
-              </div>
-
-              {isMockMode() && (
-                <div id="timerContainer" className="timer-container">
-                  <span className="timer-label">Time</span>
-                  <span id="timer">{formatTimer()}</span>
-                </div>
+            )}
+            <div className="question-header">
+              <h2 id="questionTitle">Question {currentQuestionIndex + 1}</h2>
+              {isPracticeMode() && (
+                <button
+                  id="bookmarkBtn"
+                  className={isQuestionBookmarked ? "bookmarked" : ""}
+                  onClick={handleToggleBookmark}
+                >
+                  {isQuestionBookmarked ? "★ Bookmarked" : "☆ Bookmark"}
+                </button>
               )}
-            </header>
-
-            <div className="question-status">
-              Status:{" "}
-              <strong id="questionStatus">
-                {activeUserSelection !== undefined
-                  ? "Answered"
-                  : "Not Attempted"}
-              </strong>
             </div>
 
-            <article className="question-card">
-              <div className="question-header">
-                <h2 id="questionTitle">Question {currentQuestionIndex + 1}</h2>
-                {isPracticeMode() && (
-                  <button
-                    id="bookmarkBtn"
-                    className={isQuestionBookmarked ? "bookmarked" : ""}
-                    onClick={handleToggleBookmark}
-                  >
-                    {isQuestionBookmarked ? "★ Bookmarked" : "☆ Bookmark"}
-                  </button>
-                )}
+            <div id="questionText">{activeQuestion?.question}</div>
+
+            {activeQuestion?.questionImage && (
+              <div className="question-image-container">
+                <img
+                  id="questionImage"
+                  src={activeQuestion.questionImage}
+                  alt="Figure Model Graph Reference"
+                />
               </div>
+            )}
+          </article>
 
-              <div id="questionText">{activeQuestion?.question}</div>
+          {/* SELECTION BUTTON OPTIONS */}
+          <section id="optionsContainer" className="options-section">
+            {activeQuestion?.options.map((opt, index) => {
+              const letter = ["A", "B", "C", "D"][index];
+              let optionClass = "option-btn";
+              const isSelected = activeUserSelection === letter;
 
-              {activeQuestion?.questionImage && (
-                <div className="question-image-container">
-                  <img
-                    id="questionImage"
-                    src={activeQuestion.questionImage}
-                    alt="Figure Model Graph Reference"
-                  />
-                </div>
-              )}
-            </article>
-
-            {/* SELECTION BUTTON OPTIONS */}
-            <section id="optionsContainer" className="options-section">
-              {activeQuestion?.options.map((opt, index) => {
-                const letter = ["A", "B", "C", "D"][index];
-                let optionClass = "option-btn";
-
-                // ✅ Matches against your string states ("A", "B", etc.)
-                const isSelected = activeUserSelection === letter;
-
-                // 🌟 EVALUATION COLOR LOGIC FIX
-                if (isPracticeMode() && activeUserSelection !== undefined) {
-                  if (letter === activeQuestion.answerKey) {
-                    optionClass += " correct-answer";
-                  } else if (isSelected) {
-                    optionClass += " wrong-answer";
-                  }
+              if (isPracticeMode() && activeUserSelection !== undefined) {
+                if (letter === activeQuestion.answerKey) {
+                  optionClass += " correct-answer";
                 } else if (isSelected) {
-                  optionClass += " selected-option";
+                  optionClass += " wrong-answer";
                 }
+              } else if (isSelected) {
+                optionClass += " selected-option";
+              }
 
-                return (
-                  <button
-                    key={index}
-                    type="button"
-                    className={optionClass}
-                    onClick={() => handleSelectAnswer(letter)} // ✅ Transmits "A", "B" etc.
-                    disabled={
-                      isPracticeMode() && activeUserSelection !== undefined
-                    }
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  className={optionClass}
+                  onClick={() => handleSelectAnswer(letter)}
+                  disabled={
+                    isPracticeMode() && activeUserSelection !== undefined
+                  }
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    textAlign: "left",
+                  }}
+                >
+                  <span
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      textAlign: "left",
+                      fontWeight: "bold",
+                      opacity: 0.6,
+                      minWidth: "20px",
                     }}
                   >
-                    {/* Explicit visual tag separating letters cleanly from your database text values */}
-                    <span
-                      style={{
-                        fontWeight: "bold",
-                        opacity: 0.6,
-                        minWidth: "20px",
-                      }}
-                    >
-                      {letter}.
-                    </span>
-                    <span>{opt}</span>
-                  </button>
-                );
-              })}
-            </section>
+                    {letter}.
+                  </span>
+                  <span>{opt}</span>
+                </button>
+              );
+            })}
+          </section>
 
+          {isPracticeMode() &&
+            activeUserSelection !== undefined &&
+            activeQuestion?.solution && (
+              <section
+                id="solutionContainer"
+                className="solution-container"
+                style={{ display: "block", marginTop: "20px" }}
+              >
+                <h3>Solution & Explanation</h3>
+                <p>{activeQuestion.solution}</p>
+              </section>
+            )}
+
+          <div
+            className="question-navigation"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <button
+              id="prevBtn"
+              onClick={() =>
+                setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))
+              }
+              disabled={currentQuestionIndex === 0}
+            >
+              Previous
+            </button>
+
+            {/* 🌟 Added YouTube Video Solution Walkthrough Trigger Button Link */}
             {isPracticeMode() &&
               activeUserSelection !== undefined &&
-              activeQuestion?.solution && (
-                <section
-                  id="solutionContainer"
-                  className="solution-container"
-                  style={{ display: "block", marginTop: "20px" }}
+              activeQuestion?.youtube && (
+                <a
+                  href={activeQuestion.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-video-solution"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 16px",
+                    background: "#fef2f2",
+                    color: "#dc2626",
+                    border: "1px solid #fca5a5",
+                    borderRadius: "6px",
+                    textDecoration: "none",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                  }}
                 >
-                  <h3>Solution & Explanation</h3>
-                  <p>{activeQuestion.solution}</p>
-                </section>
+                  <Video size={16} /> Watch Video Solution
+                </a>
               )}
 
-            <div className="question-navigation">
-              <button
-                id="prevBtn"
-                onClick={() =>
-                  setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))
-                }
-                disabled={currentQuestionIndex === 0}
-              >
-                Previous
-              </button>
-              <button id="nextBtn" onClick={handleNextBtnClick}>
-                {currentQuestionIndex === questions.length - 1
-                  ? isMockMode()
-                    ? "Submit Test"
-                    : "Submit Practice"
-                  : "Next"}
-              </button>
-            </div>
-          </section>
-
-          {/* 📖 1. PASSAGE CONTAINER (Injects beautifully between global grid slots) */}
-          {/* ========================================================================== */}
-          {/* 📖 COLUMN 3: RIGHT PANEL TALL PASSAGE DESIGN CARD */}
-          {/* ========================================================================== */}
-          {activeQuestion?.passage ? (
-            <div
-              className="quiz-passage-box"
-              style={{
-                backgroundColor: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "12px",
-                padding: "24px",
-                boxShadow:
-                  "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-
-                // 🔄 HEIGHT MODIFICATION SETTINGS:
-                minHeight: "450px", // Guarantees it won't be too short
-                maxHeight: "calc(100vh - 180px)", // Stretches dynamically based on screen size
-                overflowY: "auto", // Keeps internal scrolling enabled
-
-                position: "sticky",
-                top: "24px",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "12px",
-                  textTransform: "uppercase",
-                  marginBottom: "14px",
-                  color: "#2563eb",
-                  letterSpacing: "0.5px",
-                  borderBottom: "1px solid #f3f4f6",
-                  paddingBottom: "8px",
-                }}
-              >
-                📖 Reading Comprehension Passage
-              </div>
-
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "14.5px",
-                  color: "#374151",
-                  lineHeight: "1.7",
-                  whiteSpace: "pre-line",
-                  fontStyle: "italic",
-                  fontFamily: "Georgia, serif",
-                }}
-              >
-                {activeQuestion.passage}
-              </p>
-            </div>
-          ) : (
-            /* Keeps grid architecture aligned when questions don't require text passages */
-            <div
-              className="quiz-passage-placeholder"
-              style={{ opacity: 0, width: "100%" }}
-            ></div>
-          )}
-        </main>
-      ) : (
-        <main className="results-review-dashboard">
-          {/* STATS OVERVIEW HEADER */}
-          <section
-            className="results-section"
-            style={{ margin: "0 auto 40px auto", padding: "24px" }}
-          >
-            <h2>{isMockMode() ? "Mock Test Summary" : "Practice Summary"}</h2>
-            <div
-              className="results-grid"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-                gap: "16px",
-                margin: "20px 0",
-              }}
-            >
-              <div className="result-card">
-                <h3>Total Questions</h3>
-                <p>{resultsData.total}</p>
-              </div>
-              <div className="result-card">
-                <h3>Correct</h3>
-                <p>{resultsData.correct}</p>
-              </div>
-              <div className="result-card">
-                <h3>Wrong</h3>
-                <p>{resultsData.wrong}</p>
-              </div>
-              <div className="result-card">
-                <h3>Accuracy</h3>
-                <p>{resultsData.accuracy}</p>
-              </div>
-            </div>
-            <button
-              id="restartBtn"
-              className="submit-practice-btn"
-              style={{
-                maxWidth: "250px",
-                margin: "20px auto 0 auto",
-                display: "block",
-              }}
-              onClick={() => navigate("/practice")}
-            >
-              Finish & Exit
+            <button id="nextBtn" onClick={handleNextBtnClick}>
+              {currentQuestionIndex === questions.length - 1
+                ? isMockMode()
+                  ? "Submit Test"
+                  : "Submit Practice"
+                : "Next"}
             </button>
-          </section>
-        </main>
-      )}
+          </div>
+        </section>
+
+        {/* RIGHT DOCK READING COMPREHENSION PASSAGE CONTAINER BOX */}
+        {activeQuestion?.passage ? (
+          <div
+            className="quiz-passage-box"
+            style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "12px",
+              padding: "24px",
+              boxShadow:
+                "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+              minHeight: "450px",
+              maxHeight: "calc(100vh - 180px)",
+              overflowY: "auto",
+              position: "sticky",
+              top: "24px",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div
+              style={{
+                fontWeight: "bold",
+                fontSize: "12px",
+                textTransform: "uppercase",
+                marginBottom: "14px",
+                color: "#2563eb",
+                letterSpacing: "0.5px",
+                borderBottom: "1px solid #f3f4f6",
+                paddingBottom: "8px",
+              }}
+            >
+              📖 Reading Comprehension Passage
+            </div>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "14.5px",
+                color: "#374151",
+                lineHeight: "1.7",
+                whiteSpace: "pre-line",
+                fontStyle: "italic",
+                fontFamily: "Georgia, serif",
+              }}
+            >
+              {activeQuestion.passage}
+            </p>
+          </div>
+        ) : (
+          <div
+            className="quiz-passage-placeholder"
+            style={{ opacity: 0, width: "100%" }}
+          ></div>
+        )}
+      </main>
     </div>
   );
 };

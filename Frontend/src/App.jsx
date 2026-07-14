@@ -12,6 +12,7 @@ import QuizEngine from "./pages/QuizEngine";
 import Leaderboard from "./pages/Leaderboard.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
+import QuizSummary from "./pages/QuizSummary.jsx";
 
 const Footer = lazy(() => import("./components/Footer"));
 const Practice = lazy(() => import("./pages/Practice.jsx"));
@@ -45,6 +46,7 @@ function AppLayout() {
           <Route path="/about" element={<About />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/test-summary" element={<QuizSummary />} />
 
           <Route
             path="/quiz"

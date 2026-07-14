@@ -1,22 +1,44 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
+import { useUser, SignedIn, SignedOut } from "@clerk/clerk-react";
 import { AppContext } from "../context/AppContext.jsx";
 import { Trophy, Medal, Award, RefreshCw, Home } from "lucide-react";
 
 function Leaderboard() {
   const navigate = useNavigate();
+  const { user } = useUser();
   const { backendUrl } = useContext(AppContext);
+  const [searchParams] = useSearchParams();
+
+  // Extract paperId from URL (e.g. /leaderboard?paperId=xyz) or fall back gracefully to a global board
+  const paperId = searchParams.get("paperId");
+
   const [boardData, setBoardData] = useState([]);
+  const [userRank, setUserRank] = useState("-");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const targetUrl = `${backendUrl}/api/quiz/leaderboard/global`.replace(/([^:]\/)\/+/g, "$1");
+        // 🌟 FIX 1: Construct a dynamic query parameter so it safely defaults to global if paperId is omitted
+        const queryParam = paperId ? `?paperId=${paperId}` : "";
+        const targetUrl =
+          `${backendUrl}/api/quiz/leaderboard${queryParam}`.replace(
+            /([^:]\/)\/+/g,
+            "$1",
+          );
+
         const response = await axios.get(targetUrl, { withCredentials: true });
+
         if (response.data.success) {
-          setBoardData(response.data.data);
+          setBoardData(response.data.leaderboard);
+
+          // Identify current user dynamic standing spot
+          const match = response.data.leaderboard.find(
+            (item) => item.clerkId === user?.id,
+          );
+          if (match) setUserRank(match.rank);
         }
       } catch (err) {
         console.error("Error retrieving leaderboard data sets:", err);
@@ -25,68 +47,150 @@ function Leaderboard() {
       }
     };
     fetchLeaderboard();
-  }, [backendUrl]);
+  }, [backendUrl, paperId, user]);
 
-  const renderRankBadge = (index) => {
-    switch (index) {
-      case 0: return <Trophy className="rank-badge gold" size={20} />;
-      case 1: return <Medal className="rank-badge silver" size={20} />;
-      case 2: return <Award className="rank-badge bronze" size={20} />;
-      default: return <span className="rank-number-text">{index + 1}</span>;
+  const renderRankBadge = (rankNum) => {
+    switch (rankNum) {
+      case 1:
+        return <Trophy className="txt-warning" size={18} />;
+      case 2:
+        return <Medal className="txt-accent" size={18} />;
+      case 3:
+        return <Award className="txt-accent" size={18} />;
+      default:
+        return <span>{rankNum}</span>;
     }
   };
 
   return (
-    <div className="leaderboard-page-layout">
-      <div className="leaderboard-header-banner">
-        <Trophy size={40} className="floating-trophy" />
-        <h1>Meghalaya State Merit Board</h1>
-        <p>Review the top competitive scoring achievements for active MPSC screening categories.</p>
+    <div className="summary-page-wrapper" style={{ marginTop: "40px" }}>
+      {/* HEADER BANNER */}
+      <div className="summary-hero-card" style={{ marginBottom: "24px" }}>
+        <div className="hero-profile-group">
+          <Trophy size={40} className="txt-accent" />
+          <div>
+            <h1>State Merit Leaderboard</h1>
+            <p className="subtext">
+              {paperId
+                ? "Review competitive rankings and scores for this assessment paper."
+                : "Review the overall top competitive achievements across all exam categories."}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="leaderboard-container-card">
-        {loading ? (
-          <p className="board-loading">Calculating ranks from database cluster streams...</p>
-        ) : boardData.length > 0 ? (
-          <div className="board-table-responsive-wrapper">
-            <table className="leaderboard-table">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Candidate Name</th>
-                  <th>Assessment Topic</th>
-                  <th>Correct Score</th>
-                  <th>Accuracy</th>
-                </tr>
-              </thead>
-              <tbody>
-                {boardData.map((row, index) => (
-                  <tr key={row._id} className={`board-tr-row rank-${index}`}>
-                    <td>{renderRankBadge(index)}</td>
-                    <td className="candidate-name-cell">{row.userName}</td>
-                    <td className="topic-title-cell">{row.topicTitle}</td>
-                    <td className="score-cell"><strong>{row.score}</strong> / {row.totalQuestions}</td>
-                    <td><span className="accuracy-pill-badge">{row.accuracy}%</span></td>
+      {/* ACCESS VALIDATION BLOCKS */}
+      <div className="subject-performance-section">
+        {/* 🌟 CASE A: User is SIGNED IN -> Show full rankings */}
+        <SignedIn>
+          {loading ? (
+            <p
+              style={{
+                textAlign: "center",
+                padding: "20px",
+                color: "var(--text-muted)",
+              }}
+            >
+              Calculating state positions from database registry streams...
+            </p>
+          ) : boardData.length > 0 ? (
+            <>
+              <table className="leaderboard-table-element">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Candidate Name</th>
+                    <th>Score</th>
+                    <th>Accuracy</th>
+                    <th>Time Taken</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="empty-board-prompt">
-            <Award size={36} />
-            <p>No results recorded on the server yet. Be the first to secure a rank spot today!</p>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {boardData.map((row) => (
+                    <tr
+                      key={row.rank}
+                      className={`leaderboard-row-item ${row.clerkId === user?.id ? "current-user-row" : ""}`}
+                    >
+                      <td>{renderRankBadge(row.rank)}</td>
+                      <td>
+                        {row.candidateName}{" "}
+                        {row.clerkId === user?.id && " (You)"}
+                      </td>
+                      <td>
+                        <strong>{row.score}</strong>
+                      </td>
+                      <td>
+                        <span
+                          className="badge badge-success"
+                          style={{ border: "none" }}
+                        >
+                          {row.accuracy}
+                        </span>
+                      </td>
+                      <td>{row.timeTaken}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-        <div className="leaderboard-actions-row">
-          <button className="btn-board-nav btn-home" onClick={() => navigate("/")}>
-            <Home size={16} /> Home
-          </button>
-          <button className="btn-board-nav btn-retry" onClick={() => navigate("/practice")}>
-            <RefreshCw size={16} /> Try Another Quiz
-          </button>
-        </div>
+              {/* Sticky User Summary Footing Panel */}
+              {userRank !== "-" && (
+                <div className="sticky-user-scorecard">
+                  <h4>Your Absolute Meghalaya State Standing</h4>
+                  <div className="sticky-flex-metrics">
+                    <span>
+                      Rank: <strong>#{userRank}</strong>
+                    </span>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "30px",
+                color: "var(--text-muted)",
+              }}
+            >
+              <p>
+                No results recorded on the server yet. Be the first to secure a
+                spot!
+              </p>
+            </div>
+          )}
+        </SignedIn>
+
+        {/* 🌟 CASE B: User is a GUEST -> Block view board access */}
+        <SignedOut>
+          <div className="locked-leaderboard-container">
+            <div className="locked-icon">🔒</div>
+            <h4>Leaderboard Locked</h4>
+            <p className="locked-subtext">
+              Create a free account or log in to view state-wide rankings and
+              compare your performance with other aspirants across Meghalaya.
+            </p>
+            <button
+              className="btn btn-primary"
+              onClick={() => navigate("/login")}
+            >
+              Sign In to Unlock
+            </button>
+          </div>
+        </SignedOut>
+      </div>
+
+      {/* CORE UTILITY ACTIONS NAV BAR FOOTER */}
+      <div className="summary-actions-footer">
+        <button className="btn btn-outline" onClick={() => navigate("/")}>
+          <Home size={16} /> Home
+        </button>
+        <button
+          className="btn btn-primary"
+          onClick={() => navigate("/practice")}
+        >
+          <RefreshCw size={16} /> Try Another Quiz
+        </button>
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import recruitmentRoutes from "./routes/recruitmentRoutes.js";
 import paperRoutes from "./routes/paperRoutes.js";
 import questionRoutes from "./routes/questionRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
+import quizRoutes from "./routes/quizRoutes.js";
 
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
@@ -76,7 +77,8 @@ app.use(async (req, res, next) => {
 connectDB();
 
 /* ROUTES */
-app.use("/api/contact", contactRoutes); // 🌟 Mount the contact API path pipeline
+app.use("/api/contact", contactRoutes);
+app.use("/api/quiz", quizRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/authority", authorityRoutes);
 app.use("/api/recruitment", recruitmentRoutes);

@@ -1,0 +1,359 @@
+/* ==========================================================================
+   DESIGN ENGINE CORE VARIABLES
+   ========================================================================== */
+:root {
+  --primary-color: #0b3c5d;
+  --secondary-color: #328cc1;
+  --accent-color: #1d7a42; /* Success Green */
+  --text-dark: #1d2731; /* Off-Black Text */
+  --text-muted: #576574; /* Slate Grey Description Text */
+  --bg-light: #f9fbfd; /* Soft Canvas Background */
+  --bg-white: #ffffff;
+  --font-family: Arial, sans-serif;
+  --transition-smooth: all 0.3s ease;
+  --border-radius: 5px;
+
+  /* 🌟 Status Alert Systems Configured safely via OKLCH color spaces */
+  --oklch-wrong-bg: oklch(0.95 0.05 15);
+  --oklch-wrong-border: oklch(0.85 0.12 15);
+  --oklch-wrong-text: oklch(0.5 0.2 15);
+
+  --oklch-skipped-bg: oklch(0.96 0.04 85);
+  --oklch-skipped-border: oklch(0.88 0.1 85);
+  --oklch-skipped-text: oklch(0.55 0.15 85);
+
+  --oklch-correct-bg: oklch(0.95 0.05 145);
+  --oklch-correct-border: oklch(0.85 0.12 145);
+  --oklch-correct-text: oklch(0.45 0.18 145);
+}
+
+/* ==========================================================================
+   GLOBAL SUMMARY FRAMEWORK LAYOUTS
+   ========================================================================== */
+.summary-page-wrapper {
+  max-width: 1040px;
+  margin: 30px auto;
+  padding: 0 20px;
+  font-family: var(--font-family);
+  color: var(--text-dark);
+  background-color: var(--bg-light);
+}
+
+/* Premium Dashboard Info Strip Banner */
+.summary-hero-card {
+  background: var(--bg-white);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--border-radius);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.hero-profile-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hero-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--primary-color);
+  object-fit: cover;
+}
+
+.hero-exam-details {
+  text-align: right;
+}
+
+.hero-exam-details h3 {
+  margin: 0 0 6px 0;
+  color: var(--primary-color);
+}
+
+.hero-exam-details span {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Structural Menu Tabs Switching Navigation */
+.summary-tab-bar {
+  display: flex;
+  gap: 8px;
+  margin: 24px 0;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 1px;
+}
+
+.tab-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition-smooth);
+}
+
+.tab-link:hover {
+  color: var(--secondary-color);
+}
+
+.tab-link.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+/* Metric Statistics Card Deck Layout */
+.metrics-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.metric-score-card {
+  background: var(--bg-white);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--border-radius);
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+
+/* Low Score / Caution Threshold Highlight mapped into soft primary profiles */
+.metric-score-card.highlighted {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e0efff 100%);
+  border-color: var(--secondary-color);
+}
+
+.card-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  color: var(--text-dark);
+}
+
+.card-stat-row strong {
+  margin-left: auto;
+  font-size: 18px;
+}
+
+/* Core Status Colors Mapping Rules */
+.txt-success {
+  color: var(--accent-color);
+}
+.txt-danger {
+  color: var(--oklch-wrong-text);
+}
+.txt-warning {
+  color: var(--oklch-skipped-text);
+}
+.txt-accent {
+  color: var(--secondary-color);
+}
+
+/* Subject Score Metrics Rows */
+.subject-performance-section {
+  background: var(--bg-white);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--border-radius);
+  padding: 24px;
+}
+
+.subject-grid-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.subject-score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--bg-light);
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--primary-color);
+}
+
+/* Sub-panel mini metric pill tags styling definitions */
+.sub-mini-metrics {
+  display: flex;
+  gap: 8px;
+}
+
+.badge {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--border-radius);
+}
+
+.badge-success {
+  background: var(--oklch-correct-bg);
+  color: var(--oklch-correct-text);
+  border: 1px solid var(--oklch-correct-border);
+}
+
+.badge-danger {
+  background: var(--oklch-wrong-bg);
+  color: var(--oklch-wrong-text);
+  border: 1px solid var(--oklch-wrong-border);
+}
+
+.badge-warning {
+  background: var(--oklch-skipped-bg);
+  color: var(--oklch-skipped-text);
+  border: 1px solid var(--oklch-skipped-border);
+}
+
+/* Review Options Layouts Styles */
+.question-review-card {
+  background: var(--bg-white);
+  border: 1px solid #e2e8f0;
+  border-radius: var(--border-radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.review-option-item {
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--border-radius);
+  margin-top: 10px;
+  font-weight: 500;
+}
+
+.review-option-item.correct-opt {
+  background: var(--oklch-correct-bg);
+  border-color: var(--oklch-correct-border);
+  color: var(--oklch-correct-text);
+}
+
+.review-option-item.wrong-opt {
+  background: var(--oklch-wrong-bg);
+  border-color: var(--oklch-wrong-border);
+  color: var(--oklch-wrong-text);
+}
+
+.explanation-box {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-light);
+  border-radius: var(--border-radius);
+  color: var(--text-muted);
+}
+
+/* Leaderboard Tables Formatting elements */
+.leaderboard-table-element {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  background: var(--bg-white);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.leaderboard-table-element th,
+.leaderboard-table-element td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.leaderboard-row-item.current-user-row {
+  background: #f0f7ff;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* Sticky Float User Board Layout standard element */
+.sticky-user-scorecard {
+  margin-top: 24px;
+  padding: 16px 24px;
+  background: var(--primary-color);
+  color: var(--bg-white);
+  border-radius: var(--border-radius);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sticky-flex-metrics {
+  display: flex;
+  gap: 24px;
+}
+
+/* Action Footer Bars Panels */
+.summary-actions-footer {
+  margin-top: 30px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: var(--bg-white);
+  border: none;
+}
+.btn-primary:hover {
+  background: #082d46;
+}
+.btn-outline {
+  background: var(--bg-white);
+  color: var(--text-dark);
+  border: 1px solid #cbd5e1;
+}
+.btn-outline:hover {
+  background: var(--bg-light);
+}
+
+/* Locked Guest Viewboard Indicators */
+.locked-leaderboard-container {
+  text-align: center;
+  padding: 40px 20px;
+  background: var(--bg-white);
+  border: 1px dashed var(--secondary-color);
+  border-radius: var(--border-radius);
+  margin-top: 16px;
+}
+
+.locked-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.locked-subtext {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 8px 0 20px 0;
+}
