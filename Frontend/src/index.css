@@ -3137,3 +3137,41 @@ body {
 }
 
 }
+
+/* Spinner container alignments */
+.spinner-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.flex-spinner-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  gap: 12px;
+}
+
+/* The Spinning Animation */
+.spinner-icon {
+  color: #4f46e5; /* Indigo/blue theme color */
+  animation: spin 1s linear infinite;
+}
+
+/* Adjust layout spacing if needed */
+.spinner-text {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

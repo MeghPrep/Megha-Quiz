@@ -8,6 +8,7 @@ import {
   GraduationCap,
   ChevronRight,
   LayoutGrid,
+  Loader2
 } from "lucide-react";
 
 function Practice() {
@@ -161,7 +162,10 @@ function Practice() {
                   {expandedRecruitment === job._id && (
                     <div className="mobile-paper-dropdown">
     {papersLoading ? (
-      <p>Loading papers...</p>
+      <div className="spinner-container">
+        <Loader2 className="spinner-icon" size={20}/>
+        <span className="spinner-text">Loading Papers....</span>
+      </div>
     ) : papers.length > 0 ? (
       papers.map((paper) => {
         const displayYear = paper.examDate
@@ -239,9 +243,12 @@ function Practice() {
                 </p>
               </div>
             ) : papersLoading ? (
-              <p className="loading-text">
+              <div className="flex-spinner-centered">
+                <Loader2 className="spinner-icon large" size={36}/>
+                  <p className="loading-text">
                 Fetching papers from Atlas database...
               </p>
+              </div>
             ) : (
               <div className="topics-grid-layout">
                 {papers.length > 0 ? (
