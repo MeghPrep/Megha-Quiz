@@ -5,7 +5,7 @@ import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Home from "./pages/Home";
 import Contact from "./pages/Contact"; // 🌟 1. Imported your new Contact page component
-import { BrowserRouter, Routes, Route } from "react-router-dom"; // 🌟 2. Added Routes and Route here
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom"; // 🌟 2. Added Routes and Route here
 import Auth from "./pages/Auth";
 import About from "./pages/About";
 import QuizEngine from "./pages/QuizEngine";
@@ -24,46 +24,55 @@ const SkeletonLoader = () => (
   </div>
 );
 
+// 1. New Layout component that safely reads the current active URL route path
+function AppLayout() {
+  const location = useLocation();
+
+  return (
+    <div className="app-container">
+      <Navbar />
+
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/practice" element={<Practice />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<Auth />} />
+          <Route path="/signup" element={<Auth />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/admin" element={<AdminPanel />} />
+          
+          <Route
+            path="/quiz"
+            element={
+              <ProtectedRoute>
+                <QuizEngine />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </main>
+
+      {/* 🌟 Hides the Footer if the user is on the /quiz path */}
+      {location.pathname !== "/quiz" && (
+        <Suspense fallback={<SkeletonLoader />}>
+          <Footer />
+        </Suspense>
+      )}
+    </div>
+  );
+}
+
+// 2. Clean App component providing the mandatory BrowserRouter context wrapper
 function App() {
   return (
     <BrowserRouter>
       <ToastContainer position="top-right" autoClose={3000} theme="light" />
-      <div className="app-container">
-        <Navbar />
-
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-
-            <Route path="/practice" element={<Practice />} />
-
-            <Route path="/contact" element={<Contact />} />
-
-            <Route path="/login" element={<Auth />} />
-
-            <Route path="/signup" element={<Auth />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/quiz" element={<QuizEngine />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/admin" element={<AdminPanel />} />
-
-            <Route
-              path="/quiz"
-              element={
-                <ProtectedRoute>
-                  <QuizEngine />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </main>
-
-        <Suspense fallback={<SkeletonLoader />}>
-          <Footer />
-        </Suspense>
-      </div>
+      <AppLayout />
     </BrowserRouter>
   );
 }
+
 
 export default App;
