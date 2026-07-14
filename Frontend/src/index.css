@@ -3111,3 +3111,29 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+
+@media (max-width:768px){
+
+.dashboard-split-grid{
+    display:block;
+}
+
+.topics-column{
+    display:none;
+}
+
+.mobile-paper-dropdown{
+    padding:15px;
+    background:#fafafa;
+    border-top:1px solid #ddd;
+}
+
+.mobile-paper-card{
+    margin-bottom:15px;
+    padding:12px;
+    background:#fff;
+    border-radius:8px;
+    border:1px solid #eee;
+}
+
+}

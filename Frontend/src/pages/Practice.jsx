@@ -21,6 +21,7 @@ function Practice() {
 
   const [activeCategory, setActiveCategory] = useState("mpsc");
   const [loading, setLoading] = useState(true);
+  const [expandedRecruitment, setExpandedRecruitment] = useState(null);
 
   // --- 1. Fetch Recruitments on Tab Switch ---
   useEffect(() => {
@@ -125,14 +126,23 @@ function Practice() {
             <div className="exams-list-container">
               {recruitments.length > 0 ? (
                 recruitments.map((job) => (
-                  <div
+                  <>
+                    <div
                     key={job._id}
-                    className={`exam-selection-card ${selectedRecruitment?._id === job._id ? "selected" : ""}`}
-                    onClick={() => handleRecruitmentSelect(job)}
+                    className={`exam-selection-card ${
+                      selectedRecruitment?._id === job._id ? "selected" : ""}`}
+                    onClick={() => {handleRecruitmentSelect(job);
+                      if (window.innerWidth <= 768) {
+                        setExpandedRecruitment(
+                          expandedRecruitment === job._id ? null : job._id
+                        );
+                      }
+                      }}
                   >
                     <div>
                       <h3>{job.postName}</h3>
                       <p>{job.department || "No department specified"}</p>
+
                       {job.advertisementYear && (
                         <span className="text-xs opacity-60">
                           Year: {job.advertisementYear}
@@ -141,6 +151,65 @@ function Practice() {
                     </div>
                     <ChevronRight size={18} className="arrow-icon" />
                   </div>
+
+                  {/* Mobile dropdown goes here */}
+                  {expandedRecruitment === job._id && (
+  <div className="mobile-paper-dropdown">
+    {loading ? (
+      <p>Loading papers...</p>
+    ) : papers.length > 0 ? (
+      papers.map((paper) => {
+        const displayYear = paper.examDate
+          ? new Date(paper.examDate).getFullYear()
+          : "N/A";
+
+        return (
+          <div key={paper._id} className="mobile-paper-card">
+            <h4>{paper.paperTitle}</h4>
+
+            <p>
+              {paper.totalQuestions} Questions • {displayYear}
+            </p>
+
+            <div className="action-buttons-row">
+              <button
+                className="btn-action practice-mode-btn"
+                onClick={() =>
+                  navigate(`/quiz?mode=practice&paperId=${paper._id}`)
+                }
+              >
+                Practice
+              </button>
+
+              <button
+                className="btn-action mock-mode-btn"
+                onClick={() =>
+                  navigate(`/quiz?mode=mock&paperId=${paper._id}`)
+                }
+              >
+                Mock
+              </button>
+
+              {paper.pdf && (
+                <a
+                  href={paper.pdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-action pdf-download-btn"
+                >
+                  PDF
+                </a>
+              )}
+            </div>
+          </div>
+        );
+      })
+    ) : (
+      <p>No papers available.</p>
+    )}
+  </div>
+)}
+</>
                 ))
               ) : (
                 <p className="empty-prompt">
