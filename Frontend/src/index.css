@@ -3175,3 +3175,7 @@ body {
     transform: rotate(360deg);
   }
 }
+
+.exams-column .flex-spinner-centered {
+  min-height: 150px; /* Shorter heights fit nicer inside side panels */
+}
