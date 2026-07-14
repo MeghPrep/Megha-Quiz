@@ -20,13 +20,15 @@ function Practice() {
   const [papers, setPapers] = useState([]);
 
   const [activeCategory, setActiveCategory] = useState("mpsc");
-  const [loading, setLoading] = useState(true);
+  const [recruitmentLoading, setRecruitmentLoading] = useState(true);
+  const [papersLoading, setPapersLoading] = useState(false);
+
   const [expandedRecruitment, setExpandedRecruitment] = useState(null);
 
   // --- 1. Fetch Recruitments on Tab Switch ---
   useEffect(() => {
     const fetchRecruitments = async () => {
-      setLoading(true);
+      setRecruitmentLoading(true);
       try {
         const targetUrl =
           `${backendUrl}/api/recruitment?authorityId=${activeCategory.toLowerCase()}`.replace(
@@ -45,7 +47,7 @@ function Practice() {
         console.error("Error loading recruitments:", error);
         toast.error("Failed to load recruitment categories.");
       } finally {
-        setLoading(false);
+        setRecruitmentLoading(false);
       }
     };
 
@@ -56,7 +58,7 @@ function Practice() {
   const handleRecruitmentSelect = async (recruitmentItem) => {
     setSelectedRecruitment(recruitmentItem);
     setPapers([]);
-    setLoading(true);
+    setPapersLoading(true);
     try {
       const targetUrl =
         `${backendUrl}/api/paper?recruitmentId=${recruitmentItem._id}`.replace(
@@ -75,7 +77,7 @@ function Practice() {
       console.error("Error loading papers:", error);
       toast.error("Could not retrieve question papers.");
     } finally {
-      setLoading(false);
+      setPapersLoading(false);
     }
   };
 
@@ -124,7 +126,10 @@ function Practice() {
               {activeCategory.split("-")[0].toUpperCase()})
             </h2>
             <div className="exams-list-container">
-              {recruitments.length > 0 ? (
+              {recruitmentLoading ? (
+                <p className="loading-text">Loading recruitments...</p>
+              ):
+              recruitments.length > 0 ? (
                 recruitments.map((job) => (
                   <>
                     <div
@@ -154,8 +159,8 @@ function Practice() {
 
                   {/* Mobile dropdown goes here */}
                   {expandedRecruitment === job._id && (
-  <div className="mobile-paper-dropdown">
-    {loading ? (
+                    <div className="mobile-paper-dropdown">
+    {papersLoading ? (
       <p>Loading papers...</p>
     ) : papers.length > 0 ? (
       papers.map((paper) => {
@@ -233,7 +238,7 @@ function Practice() {
                   quiz modules.
                 </p>
               </div>
-            ) : loading ? (
+            ) : papersLoading ? (
               <p className="loading-text">
                 Fetching papers from Atlas database...
               </p>
