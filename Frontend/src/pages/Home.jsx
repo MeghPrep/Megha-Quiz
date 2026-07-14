@@ -81,8 +81,6 @@ function Home() {
         subtitle="Practice MPSC, DSC, Meghalaya Police, TET, Secretariat and other competitive examinations with thousands of questions."
         primaryBtnText="Start Practice"
         primaryBtnLink="/practice"
-        secondaryBtnText="Take Mock Test"
-        secondaryBtnLink="/mock-test"
       />
 
       {/* EXAM CATEGORIES */}
