@@ -128,7 +128,11 @@ function Practice() {
             </h2>
             <div className="exams-list-container">
               {recruitmentLoading ? (
-                <p className="loading-text">Loading recruitments...</p>
+                <div className="flex-spinner-centered">
+                  <Loader2 className="spinner-icon large" size={36}/>
+                  <p className="loading-text">Loading recruitments...</p>
+                </div>
+                
               ):
               recruitments.length > 0 ? (
                 recruitments.map((job) => (
