@@ -4,8 +4,8 @@ import CardSkeleton from "./components/CardSkeleton";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Home from "./pages/Home";
-import Contact from "./pages/Contact"; // 🌟 1. Imported your new Contact page component
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom"; // 🌟 2. Added Routes and Route here
+import Contact from "./pages/Contact";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Auth from "./pages/Auth";
 import About from "./pages/About";
 import QuizEngine from "./pages/QuizEngine";
@@ -37,12 +37,15 @@ function AppLayout() {
           <Route path="/" element={<Home />} />
           <Route path="/practice" element={<Practice />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/login" element={<Auth />} />
-          <Route path="/signup" element={<Auth />} />
+
+          {/* 🌟 FIX: Appended /* to capture Clerk authentication sub-routes smoothly */}
+          <Route path="/login/*" element={<Auth />} />
+          <Route path="/signup/*" element={<Auth />} />
+
           <Route path="/about" element={<About />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/admin" element={<AdminPanel />} />
-          
+
           <Route
             path="/quiz"
             element={
@@ -54,7 +57,7 @@ function AppLayout() {
         </Routes>
       </main>
 
-      {/* 🌟 Hides the Footer if the user is on the /quiz path */}
+      {/* Hides the Footer if the user is on the /quiz path */}
       {location.pathname !== "/quiz" && (
         <Suspense fallback={<SkeletonLoader />}>
           <Footer />
@@ -73,6 +76,5 @@ function App() {
     </BrowserRouter>
   );
 }
-
 
 export default App;
