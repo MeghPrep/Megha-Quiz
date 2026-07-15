@@ -12,11 +12,18 @@ export default function CurrentAffairsTimeline() {
     axios
       .get("/api/current-affairs")
       .then((res) => {
-        setIssues(res.data);
+        // 🌟 Ensure we only set state if data is a valid array
+        if (Array.isArray(res.data)) {
+          setIssues(res.data);
+        } else {
+          console.error("Expected array from server, received:", res.data);
+          setIssues([]); // Fallback to an empty list
+        }
         setLoading(false);
       })
       .catch((err) => {
         console.error("Timeline loading failed:", err);
+        setIssues([]); // Fallback to an empty list on network failure
         setLoading(false);
       });
   }, []);
@@ -35,10 +42,10 @@ export default function CurrentAffairsTimeline() {
       </header>
 
       <div className="timeline-list">
-        {issues.length === 0 ? (
+        {/* 🌟 Protected check with Array.isArray to stop e.map production runtime breakages completely */}
+        {!Array.isArray(issues) || issues.length === 0 ? (
           <div className="no-issues">
-            No weekly issues published yet. Use the database seeder to inject
-            records.
+            No weekly issues published yet or server response is invalid. Use the database seeder to inject records.
           </div>
         ) : (
           issues.map((issue) => (
