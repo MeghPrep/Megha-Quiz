@@ -23,9 +23,27 @@ const app = express();
 const PORT = 3000;
 
 /* CORS MIDDLEWARE */
+/* CORS MIDDLEWARE */
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://megha-quiz.vercel.app",
+];
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://megha-quiz.vercel.app"],
+    origin: function (origin, callback) {
+      // Allow local testing, scripts, and server-to-server operations natively
+      if (!origin) return callback(null, true);
+
+      // Authorize dynamic preview branch domains generated on push runs by Vercel
+      const isVercelPreview = origin.endsWith(".vercel.app");
+
+      if (allowedOrigins.includes(origin) || isVercelPreview) {
+        callback(null, true);
+      } else {
+        callback(new Error("Blocked by Megha Quiz Security CORS Policy"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
