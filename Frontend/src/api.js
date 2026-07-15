@@ -1,10 +1,10 @@
 import axios from "axios";
 
-// ✅ Dynamic URL parser checking if you are executing locally or on Vercel production branch environments
+// ✅ DYNAMIC CONFIGURATION: Points to the local server or the true backend production URL
 const API_BASE_URL =
   window.location.hostname === "localhost"
     ? "http://localhost:3000"
-    : window.location.origin; // 🌟 DYNAMIC FIX: Automatically evaluates and links the active Vercel domain!
+    : "https://vercel.app"; // 🌟 Point directly to your active Vercel backend server!
 
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
