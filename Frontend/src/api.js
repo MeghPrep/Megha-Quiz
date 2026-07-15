@@ -1,10 +1,10 @@
 import axios from "axios";
 
-// ✅ DYNAMIC CONFIGURATION: Points to the local server or the true backend production URL
+// ✅ Explicitly target your actual live backend instance on production
 const API_BASE_URL =
   window.location.hostname === "localhost"
     ? "http://localhost:3000"
-    : "https://vercel.app"; // 🌟 Point directly to your active Vercel backend server!
+    : "https://megha-quiz-87mn.vercel.app";
 
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
