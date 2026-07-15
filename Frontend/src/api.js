@@ -1,10 +1,10 @@
 import axios from "axios";
 
-// ✅ Dynamic URL parser checking if you are executing locally or on Vercel production
+// ✅ Dynamic URL parser checking if you are executing locally or on Vercel production branch environments
 const API_BASE_URL =
   window.location.hostname === "localhost"
     ? "http://localhost:3000"
-    : "https://megha-quiz.vercel.app";
+    : window.location.origin; // 🌟 DYNAMIC FIX: Automatically evaluates and links the active Vercel domain!
 
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
