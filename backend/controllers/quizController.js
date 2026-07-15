@@ -6,25 +6,34 @@ export const submitQuizResult = async (req, res) => {
   try {
     const { userId } = getAuth(req);
 
-    // Strict guard block protecting against unauthenticated submissions saving records
     if (!userId) {
       return res
         .status(401)
         .json({ success: false, message: "Unauthorized token payload." });
     }
 
-    const { paperId, score, totalQuestions, accuracy, mode } = req.body;
+    const {
+      paperId,
+      currentAffairsId,
+      quizType,
+      score,
+      totalQuestions,
+      accuracy,
+      mode,
+    } = req.body;
 
-    if (!paperId || score === undefined || !totalQuestions) {
+    if (score === undefined || !totalQuestions) {
       return res
         .status(400)
         .json({ success: false, message: "Missing evaluation parameters." });
     }
 
-    // Insert evaluation metrics document record into the collection cluster
+    // 🌟 Create the document based on the incoming quiz type profile mapping
     const newRecord = await QuizHistory.create({
       clerkId: userId,
-      paperId,
+      paperId: quizType === "currentAffairs" ? null : paperId,
+      currentAffairsId: quizType === "currentAffairs" ? currentAffairsId : null,
+      quizType: quizType || "regularPaper",
       score,
       totalQuestions,
       accuracy,
@@ -90,5 +99,48 @@ export const getLeaderboard = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Server Error pulling rankings." });
+  }
+};
+
+export const getStudentDashboardStats = async (req, res) => {
+  try {
+    const { userId } = getAuth(req);
+
+    // Guard block protecting against unauthenticated requests
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized profile request token.",
+      });
+    }
+
+    // 1. Fetch the logged-in candidate's synchronized baseline profile fields
+    const userProfile = await users.findOne({ clerkId: userId });
+    if (!userProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "User profile workspace workspace synchronization pending.",
+      });
+    }
+
+    // 2. Fetch past test performance records for this specific candidate (Newest attempts first)
+    const attempts = await QuizHistory.find({ clerkId: userId })
+      .sort({ createdAt: -1 })
+      .populate("paperId", "paperTitle totalQuestions")
+      .populate("currentAffairsId", "weekTitle")
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      profile: userProfile,
+      attempts: attempts || [],
+    });
+  } catch (error) {
+    console.error("Dashboard profile analytical query failure:", error);
+    return res.status(500).json({
+      success: false,
+      message:
+        "Internal server error extracting historical quiz summary matrix maps.",
+    });
   }
 };

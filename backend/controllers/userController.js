@@ -13,28 +13,47 @@ export const getStatistics = async (req, res) => {
       });
     }
 
-    // 🌟 1. On-Demand Sync: Check if this logged-in Clerk user exists in your MongoDB
+    // 🌟 1. Fetch full profile details directly from Clerk using the backend client SDK [1]
+    const clerkUser = await clerkClient.users.getUser(userId);
+    const profilePicture = clerkUser.imageUrl || ""; // 🌟 Pull Gmail/Clerk profile picture string URL link
+
+    // 🌟 2. Check if this logged-in Clerk user exists in your MongoDB
     let userRecord = await users.findOne({ clerkId: userId });
 
     if (!userRecord) {
-      // 🌟 2. Fetch full profile details directly from Clerk using the backend client SDK [1]
-      const clerkUser = await clerkClient.users.getUser(userId);
       const emailAddress = clerkUser.emailAddresses[0]?.emailAddress || "";
       const fullName =
         `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim();
 
-      // 🌟 3. Create the missing profile entry in your Atlas Database [1]
+      // 🌟 3. Create the missing profile entry in your Atlas Database with the picture [1]
       userRecord = await users.create({
         clerkId: userId,
         fullName: fullName || "Guest User",
         email: emailAddress,
+        profileImage: profilePicture, // 🌟 Save picture string path to database mapping fields
         role: "user",
         isLoggedIn: true,
       });
-    } else if (!userRecord.isLoggedIn) {
-      // If the user exists but was flagged logged out, toggle their active state
-      userRecord.isLoggedIn = true;
-      await userRecord.save();
+    } else {
+      // 🌟 4. FALLBACK UPGRADE: If user exists but lacks a picture or picture changed, synchronize it!
+      let shouldSave = false;
+
+      if (
+        !userRecord.profileImage ||
+        userRecord.profileImage !== profilePicture
+      ) {
+        userRecord.profileImage = profilePicture;
+        shouldSave = true;
+      }
+
+      if (!userRecord.isLoggedIn) {
+        userRecord.isLoggedIn = true;
+        shouldSave = true;
+      }
+
+      if (shouldSave) {
+        await userRecord.save();
+      }
     }
 
     // --- Original Statistics Math Logic ---

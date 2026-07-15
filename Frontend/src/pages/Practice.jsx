@@ -8,7 +8,7 @@ import {
   GraduationCap,
   ChevronRight,
   LayoutGrid,
-  Loader2
+  Loader2,
 } from "lucide-react";
 
 function Practice() {
@@ -129,100 +129,109 @@ function Practice() {
             <div className="exams-list-container">
               {recruitmentLoading ? (
                 <div className="flex-spinner-centered">
-                  <Loader2 className="spinner-icon large" size={36}/>
+                  <Loader2 className="spinner-icon large" size={36} />
                   <p className="loading-text">Loading recruitments...</p>
                 </div>
-                
-              ):
-              recruitments.length > 0 ? (
+              ) : recruitments.length > 0 ? (
                 recruitments.map((job) => (
-                  <>
+                  <React.Fragment key={job._id}>
                     <div
-                    key={job._id}
-                    className={`exam-selection-card ${
-                      selectedRecruitment?._id === job._id ? "selected" : ""}`}
-                    onClick={() => {handleRecruitmentSelect(job);
-                      if (window.innerWidth <= 768) {
-                        setExpandedRecruitment(
-                          expandedRecruitment === job._id ? null : job._id
-                        );
-                      }
+                      className={`exam-selection-card ${
+                        selectedRecruitment?._id === job._id ? "selected" : ""
+                      }`}
+                      onClick={() => {
+                        handleRecruitmentSelect(job);
+                        if (window.innerWidth <= 768) {
+                          setExpandedRecruitment(
+                            expandedRecruitment === job._id ? null : job._id,
+                          );
+                        }
                       }}
-                  >
-                    <div>
-                      <h3>{job.postName}</h3>
-                      <p>{job.department || "No department specified"}</p>
+                    >
+                      <div>
+                        <h3>{job.postName}</h3>
+                        <p>{job.department || "No department specified"}</p>
 
-                      {job.advertisementYear && (
-                        <span className="text-xs opacity-60">
-                          Year: {job.advertisementYear}
-                        </span>
-                      )}
+                        {job.advertisementYear && (
+                          <span className="text-xs opacity-60">
+                            Year: {job.advertisementYear}
+                          </span>
+                        )}
+                      </div>
+                      <ChevronRight size={18} className="arrow-icon" />
                     </div>
-                    <ChevronRight size={18} className="arrow-icon" />
-                  </div>
 
-                  {/* Mobile dropdown goes here */}
-                  {expandedRecruitment === job._id && (
-                    <div className="mobile-paper-dropdown">
-    {papersLoading ? (
-      <div className="spinner-container">
-        <Loader2 className="spinner-icon" size={20}/>
-        <span className="spinner-text">Loading Papers....</span>
-      </div>
-    ) : papers.length > 0 ? (
-      papers.map((paper) => {
-        const displayYear = paper.examDate
-          ? new Date(paper.examDate).getFullYear()
-          : "N/A";
+                    {/* Mobile dropdown goes here */}
+                    {expandedRecruitment === job._id && (
+                      <div className="mobile-paper-dropdown">
+                        {papersLoading ? (
+                          <div className="spinner-container">
+                            <Loader2 className="spinner-icon" size={20} />
+                            <span className="spinner-text">
+                              Loading Papers....
+                            </span>
+                          </div>
+                        ) : papers.length > 0 ? (
+                          papers.map((paper) => {
+                            const displayYear = paper.examDate
+                              ? new Date(paper.examDate).getFullYear()
+                              : "N/A";
 
-        return (
-          <div key={paper._id} className="mobile-paper-card">
-            <h4>{paper.paperTitle}</h4>
+                            return (
+                              <div
+                                key={paper._id}
+                                className="mobile-paper-card"
+                              >
+                                <h4>{paper.paperTitle}</h4>
 
-            <p>
-              {paper.totalQuestions} Questions • {displayYear}
-            </p>
+                                <p>
+                                  {paper.totalQuestions} Questions •{" "}
+                                  {displayYear}
+                                </p>
 
-            <div className="action-buttons-row">
-              <button
-                className="btn-action practice-mode-btn"
-                onClick={() =>
-                  navigate(`/quiz?mode=practice&paperId=${paper._id}`)
-                }
-              >
-                Practice
-              </button>
+                                <div className="action-buttons-row">
+                                  <button
+                                    className="btn-action practice-mode-btn"
+                                    onClick={() =>
+                                      navigate(
+                                        `/quiz?mode=practice&paperId=${paper._id}`,
+                                      )
+                                    }
+                                  >
+                                    Practice
+                                  </button>
 
-              <button
-                className="btn-action mock-mode-btn"
-                onClick={() =>
-                  navigate(`/quiz?mode=mock&paperId=${paper._id}`)
-                }
-              >
-                Mock
-              </button>
+                                  <button
+                                    className="btn-action mock-mode-btn"
+                                    onClick={() =>
+                                      navigate(
+                                        `/quiz?mode=mock&paperId=${paper._id}`,
+                                      )
+                                    }
+                                  >
+                                    Mock
+                                  </button>
 
-              {paper.pdf && (
-                <a
-                  href={paper.pdf}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-action pdf-download-btn"
-                >
-                  PDF
-                </a>
-              )}
-            </div>
-          </div>
-        );
-      })
-    ) : (
-      <p>No papers available.</p>
-    )}
-  </div>
-)}
-</>
+                                  {paper.pdf && (
+                                    <a
+                                      href={paper.pdf}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="btn-action pdf-download-btn"
+                                    >
+                                      PDF
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p>No papers available.</p>
+                        )}
+                      </div>
+                    )}
+                  </React.Fragment>
                 ))
               ) : (
                 <p className="empty-prompt">
@@ -248,10 +257,10 @@ function Practice() {
               </div>
             ) : papersLoading ? (
               <div className="flex-spinner-centered">
-                <Loader2 className="spinner-icon large" size={36}/>
-                  <p className="loading-text">
-                Fetching papers from Atlas database...
-              </p>
+                <Loader2 className="spinner-icon large" size={36} />
+                <p className="loading-text">
+                  Fetching papers from Atlas database...
+                </p>
               </div>
             ) : (
               <div className="topics-grid-layout">

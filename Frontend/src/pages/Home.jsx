@@ -35,8 +35,7 @@ function Home() {
 
   const appFeatures = [
     { id: 1, title: "Practice Questions", desc: "Unlimited practice mode." },
-    { id: 2, title: "Mock Tests", desc: "Exam simulation with timer." },
-    { id: 3, title: "Bookmarks", desc: "Save important questions." },
+
     { id: 4, title: "Progress Tracking", desc: "Monitor your improvement." },
     { id: 5, title: "Current Affairs", desc: "Daily updated quizzes." },
     {
@@ -52,12 +51,6 @@ function Home() {
       links: "daily-quiz",
       heading: "Daily Quiz",
       paragraph: "Challenge Yourself Today",
-    },
-    {
-      id: 2,
-      links: "bookmarks",
-      heading: "Bookmarks",
-      paragraph: "Review your Mistakes",
     },
     {
       id: 3,

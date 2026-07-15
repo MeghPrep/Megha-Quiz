@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { SignedIn, SignedOut } from "@clerk/clerk-react";
-import { useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
+import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import {
   Trophy,
@@ -22,8 +22,10 @@ function QuizSummary({
   evaluationMetrics,
   questionsRawList,
   submittedAnswers,
+  paperDetails, // 🌟 Ensure this parameter mapping exists
 }) {
   const { user, isLoaded } = useUser();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [userRank, setUserRank] = useState("-");
@@ -426,7 +428,7 @@ function QuizSummary({
         </button>
         <button
           className="btn btn-primary"
-          onClick={() => (window.location.href = "/practice")}
+          onClick={() => navigate("/dashboard")}
         >
           <Home size={16} /> Go to Dashboard
         </button>

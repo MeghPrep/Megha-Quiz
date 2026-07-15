@@ -1,0 +1,85 @@
+/* Container & Global Variables */
+.timeline-container, .magazine-viewport {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #fdfdfb; /* Classic newsprint tone */
+  color: #1a1a1a;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 0.04);
+  border: 1px solid #e8e8e3;
+  border-radius: 4px;
+}
+
+/* Timeline Layout Elements */
+.timeline-header {
+  text-align: center;
+  margin-bottom: 40px;
+  border-bottom: 2px solid #222;
+  padding-bottom: 16px;
+}
+.timeline-header h1 { font-family: 'Times New Roman', Times, serif; font-size: 2.5rem; margin: 0 0 8px 0; }
+.timeline-list { display: flex; flex-direction: column; gap: 16px; }
+.timeline-item-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.timeline-item-card:hover {
+  transform: translateY(-2px);
+  border-color: oklch(0.45 0.15 250);
+  background: #fafafa;
+}
+.calendar-badge { background: #334155; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+.timeline-item-card h3 { margin: 8px 0 4px 0; color: #0f172a; }
+.read-arrow { font-size: 0.9rem; font-weight: bold; color: oklch(0.45 0.15 250); }
+
+/* Magazine Editorial Styling */
+.magazine-masthead {
+  text-align: center;
+  border-bottom: 5px double #111;
+  padding-bottom: 16px;
+  margin-bottom: 40px;
+}
+.publication-brand { font-size: 0.85rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #475569; }
+.magazine-masthead h1 { font-family: 'Times New Roman', Times, serif; font-size: 3.5rem; font-weight: 900; margin: 6px 0; letter-spacing: -1px; }
+.issue-meta-line { font-size: 0.95rem; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; }
+.issue-meta-line .divider { margin: 0 12px; color: #cbd5e1; }
+
+/* Article Breakdown */
+.newspaper-layout-grid { display: flex; flex-direction: column; gap: 50px; }
+.news-editorial-block { border-bottom: 1px dashed #cbd5e1; padding-bottom: 40px; }
+.news-editorial-block:last-child { border-bottom: none; }
+.article-headline { font-family: 'Times New Roman', Times, serif; font-size: 2.1rem; color: #111; line-height: 1.2; margin: 0 0 8px 0; }
+.article-summary-bar { color: #475569; font-size: 1.05rem; line-height: 1.4; margin-bottom: 16px; }
+.article-main-body { font-family: Georgia, serif; font-size: 1.15rem; line-height: 1.75; text-align: justify; color: #2d3748; }
+
+/* Exam Focus Box */
+.editorial-takeaway-footer {
+  margin-top: 16px;
+  background: oklch(0.97 0.01 140);
+  border-left: 4px solid oklch(0.62 0.17 140);
+  padding: 16px;
+  border-radius: 0 4px 4px 0;
+}
+.takeaway-badge { font-size: 0.8rem; font-weight: 800; color: oklch(0.42 0.17 140); letter-spacing: 1px; margin-bottom: 4px; }
+.takeaway-text { margin: 0; font-size: 0.95rem; font-weight: 500; color: #1e293b; }
+
+/* Footer Revision Component */
+.magazine-footer-action-panel { margin-top: 60px; border-top: 4px double #111; padding-top: 30px; }
+.action-callout-card { background: #f1f5f9; border-radius: 8px; padding: 24px; text-align: center; }
+.action-callout-card h3 { margin: 0 0 8px 0; font-size: 1.4rem; color: #0f172a; }
+.action-callout-card p { color: #475569; margin: 0 0 20px 0; font-size: 0.95rem; }
+.launch-revision-quiz-btn {
+  background: oklch(0.35 0.14 250); color: #fff; border: none; padding: 14px 32px;
+  font-size: 1.1rem; font-weight: 700; border-radius: 6px; cursor: pointer; transition: background 0.2s;
+}
+.launch-revision-quiz-btn:hover { background: oklch(0.25 0.12 250); }
+
+/* Loaders */
+.magazine-loader { text-align: center; padding: 60px; font-weight: bold; color: #64748b; }

@@ -2,7 +2,6 @@ import React, { lazy, Suspense } from "react";
 import { ToastContainer } from "react-toastify";
 import CardSkeleton from "./components/CardSkeleton";
 import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
 import Home from "./pages/Home";
 import Contact from "./pages/Contact";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
@@ -13,6 +12,11 @@ import Leaderboard from "./pages/Leaderboard.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
 import QuizSummary from "./pages/QuizSummary.jsx";
+import CurrentAffairsTimeline from "./components/current-affairs/CurrentAffairsTimeline.jsx";
+import CurrentAffairsMagazine from "./components/current-affairs/CurrentAffairsMagazine.jsx";
+
+// 🌟 IMPORT YOUR NEW PERFORMANCE WORKSPACE
+import StudentDashboard from "./pages/StudentDashboard.jsx";
 
 const Footer = lazy(() => import("./components/Footer"));
 const Practice = lazy(() => import("./pages/Practice.jsx"));
@@ -25,7 +29,7 @@ const SkeletonLoader = () => (
   </div>
 );
 
-// 1. New Layout component that safely reads the current active URL route path
+// 1. Layout component that reads the current active URL route path
 function AppLayout() {
   const location = useLocation();
 
@@ -36,10 +40,20 @@ function AppLayout() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/practice" element={<Practice />} />
+
+          {/* Wrapped Practice with Suspense to handle the lazy import correctly */}
+          <Route
+            path="/practice"
+            element={
+              <Suspense fallback={<SkeletonLoader />}>
+                <Practice />
+              </Suspense>
+            }
+          />
+
           <Route path="/contact" element={<Contact />} />
 
-          {/* 🌟 FIX: Appended /* to capture Clerk authentication sub-routes smoothly */}
+          {/* Capture Clerk authentication sub-routes smoothly */}
           <Route path="/login/*" element={<Auth />} />
           <Route path="/signup/*" element={<Auth />} />
 
@@ -47,6 +61,21 @@ function AppLayout() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/test-summary" element={<QuizSummary />} />
+          <Route path="/current-affairs" element={<CurrentAffairsTimeline />} />
+          <Route
+            path="/current-affairs/issue/:id"
+            element={<CurrentAffairsMagazine />}
+          />
+
+          {/* 🌟 MOUNT THE NEW PROTECTED USER PATH ROUTE GRID */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/quiz"

@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --primary-color: #0b3c5d;
   --secondary-color: #328cc1;
@@ -10,7 +12,7 @@
   --bg-light: #f9fbfd;
   /* Soft Canvas Background */
   --bg-white: #ffffff;
-  --font-family: Arial, sans-serif;
+  --font-family: "Times New Roman", Times, serif;
   --transition-smooth: all 0.3s ease;
   --border-radius: 5px;
 }
@@ -3112,30 +3114,28 @@ body {
   }
 }
 
-@media (max-width:768px){
+@media (max-width: 768px) {
+  .dashboard-split-grid {
+    display: block;
+  }
 
-.dashboard-split-grid{
-    display:block;
-}
+  .topics-column {
+    display: none;
+  }
 
-.topics-column{
-    display:none;
-}
+  .mobile-paper-dropdown {
+    padding: 15px;
+    background: #fafafa;
+    border-top: 1px solid #ddd;
+  }
 
-.mobile-paper-dropdown{
-    padding:15px;
-    background:#fafafa;
-    border-top:1px solid #ddd;
-}
-
-.mobile-paper-card{
-    margin-bottom:15px;
-    padding:12px;
-    background:#fff;
-    border-radius:8px;
-    border:1px solid #eee;
-}
-
+  .mobile-paper-card {
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #eee;
+  }
 }
 
 /* Spinner container alignments */

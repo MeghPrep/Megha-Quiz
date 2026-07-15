@@ -20,6 +20,11 @@ const usersSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
+    // 🌟 ADDED: Profile Image field string link mapping to capture Clerk/Gmail profile pictures
+    profileImage: {
+      type: String,
+      default: "",
+    },
     role: {
       type: String,
       enum: ["user", "admin"],

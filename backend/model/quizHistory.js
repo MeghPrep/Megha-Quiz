@@ -7,10 +7,23 @@ const quizHistorySchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    // 🌟 REMOVED required: true to support both types of quiz records gracefully
     paperId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "papers",
-      required: true,
+      required: false,
+    },
+    // 📰 ADDED: Reference pointer mapping to link Current Affairs editions cleanly
+    currentAffairsId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CurrentAffair", // Matches your current affairs parent model string
+      required: false,
+    },
+    // 🎯 ADDED: Simple type marker indicator to index histories efficiently
+    quizType: {
+      type: String,
+      enum: ["regularPaper", "currentAffairs"],
+      default: "regularPaper",
     },
     score: {
       type: Number,

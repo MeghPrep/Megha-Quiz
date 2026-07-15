@@ -24,6 +24,7 @@ const QuizEngine = () => {
   const queryParams = new URLSearchParams(location.search);
   const quizMode = queryParams.get("mode") || "practice";
   const paperId = queryParams.get("paperId");
+  const currentAffairsId = queryParams.get("currentAffairsId");
 
   const isMockMode = () => quizMode === "mock";
   const isPracticeMode = () => quizMode === "practice";
@@ -55,76 +56,121 @@ const QuizEngine = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const timerIntervalRef = useRef(null);
-  const startTimeRef = useRef(Date.now()); // Tracks precisely when the quiz loaded
+  const startTimeRef = useRef(Date.now());
 
-  // ==========================================================================
-  // FETCH QUESTIONS LIVE FROM MONGODB ATLAS
-  // ==========================================================================
-  // ==========================================================================
   // FETCH QUESTIONS & PAPER DETAILS LIVE FROM MONGODB ATLAS
   // ==========================================================================
   useEffect(() => {
     const fetchExamModuleData = async () => {
-      if (!paperId) {
-        toast.error("Invalid Exam Paper reference pointer.");
+      // 🌟 1. VALIDATION GATE: Ensure at least one reference pointer exists
+      if (!paperId && !currentAffairsId) {
+        toast.error("Invalid Exam reference pointer.");
         navigate("/practice");
         return;
       }
 
       setIsLoading(true);
       try {
-        const questionsUrl =
-          `${backendUrl}/api/question?paperId=${paperId}`.replace(
+        let questionsRes;
+        let totalSecondsAllowed = 3600; // Baseline fallback default (1 hour)
+
+        // ========================================================
+        // BRANCH A: CURRENT AFFAIRS REVISION QUIZ PIPELINE
+        // ========================================================
+        if (currentAffairsId) {
+          const caUrl =
+            `${backendUrl}/api/current-affairs/${currentAffairsId}/questions`.replace(
+              /([^:]\/)\/+/g,
+              "$1",
+            );
+
+          questionsRes = await axios.get(caUrl, { withCredentials: true });
+
+          // Parse questions from flat array or standardized object structure
+          const parsedQuestions = Array.isArray(questionsRes.data)
+            ? questionsRes.data
+            : questionsRes.data.questions || [];
+
+          if (parsedQuestions.length > 0) {
+            setQuestions(parsedQuestions);
+          } else {
+            toast.warning(
+              "This current affairs issue has no questions uploaded yet.",
+            );
+            navigate("/current-affairs");
+            return;
+          }
+
+          // Set paper metadata placeholders to keep your scoreboard view safe
+          setPaperDetails({
+            title: "Weekly Current Affairs Revision Quiz",
+            timeAllowed: 30, // Assign a default 30 minutes allowance for CA revision
+          });
+          totalSecondsAllowed = 30 * 60;
+
+          document.title = "Current Affairs Quiz | Megha Quiz App";
+
+          // Handle separate localStorage caching for Current Affairs to prevent collisions
+          const cachedAnswers = localStorage.getItem(
+            `userAnswers_ca_${currentAffairsId}`,
+          );
+          const cachedBookmarks = localStorage.getItem(
+            `bookmarks_ca_${currentAffairsId}`,
+          );
+          if (cachedAnswers) setUserAnswers(JSON.parse(cachedAnswers));
+          if (cachedBookmarks) setBookmarks(JSON.parse(cachedBookmarks));
+        }
+
+        // ========================================================
+        // BRANCH B: LEGACY AUTHORITY PAPERS PIPELINE (UNTOUCHED)
+        // ========================================================
+        else if (paperId) {
+          const questionsUrl =
+            `${backendUrl}/api/question?paperId=${paperId}`.replace(
+              /([^:]\/)\/+/g,
+              "$1",
+            );
+          const paperUrl = `${backendUrl}/api/paper/${paperId}`.replace(
             /([^:]\/)\/+/g,
             "$1",
           );
 
-        // 🌟 Look up the specific paper details dynamically
-        const paperUrl = `${backendUrl}/api/paper/${paperId}`.replace(
-          /([^:]\/)\/+/g,
-          "$1",
-        );
+          const [qRes, pRes] = await Promise.all([
+            axios.get(questionsUrl, { withCredentials: true }),
+            axios.get(paperUrl, { withCredentials: true }).catch(() => null),
+          ]);
 
-        // Execute both database operations concurrently
-        const [questionsRes, paperRes] = await Promise.all([
-          axios.get(questionsUrl, { withCredentials: true }),
-          axios.get(paperUrl, { withCredentials: true }).catch(() => null), // Failsafe fallback
-        ]);
+          if (
+            qRes.data.success &&
+            qRes.data.questions &&
+            qRes.data.questions.length > 0
+          ) {
+            setQuestions(qRes.data.questions);
+          } else {
+            toast.warning("This exam paper has no questions uploaded yet.");
+            navigate("/practice");
+            return;
+          }
 
-        if (
-          questionsRes.data.success &&
-          questionsRes.data.questions &&
-          questionsRes.data.questions.length > 0
-        ) {
-          setQuestions(questionsRes.data.questions);
-        } else {
-          toast.warning("This exam paper has no questions uploaded yet.");
-          navigate("/practice");
-          return;
+          if (pRes && pRes.data.success && pRes.data.paper) {
+            const paperMeta = pRes.data.paper;
+            setPaperDetails(paperMeta);
+            totalSecondsAllowed = (paperMeta.timeAllowed || 60) * 60;
+          }
+
+          document.title =
+            quizMode === "mock"
+              ? "Mock Test | Megha Quiz App"
+              : "Practice Mode | Megha Quiz App";
+
+          const cachedAnswers = localStorage.getItem(`userAnswers_${paperId}`);
+          const cachedBookmarks = localStorage.getItem(`bookmarks_${paperId}`);
+          if (cachedAnswers) setUserAnswers(JSON.parse(cachedAnswers));
+          if (cachedBookmarks) setBookmarks(JSON.parse(cachedBookmarks));
         }
 
-        // 🌟 Process Paper Configuration (Dynamic Allowed Time Limit)
-        if (paperRes && paperRes.data.success && paperRes.data.paper) {
-          const paperMeta = paperRes.data.paper;
-          setPaperDetails(paperMeta); // Make sure 'const [paperDetails, setPaperDetails] = useState(null);' is defined at the top of your component!
-
-          // Convert database minutes integer (e.g., 150) straight to countdown seconds
-          const totalSecondsAllowed = (paperMeta.timeAllowed || 60) * 60;
-          setTimeRemaining(totalSecondsAllowed);
-        } else {
-          // Default baseline fallback if the paper document config fetch misses
-          setTimeRemaining(3600);
-        }
-
-        document.title = isMockMode()
-          ? "Mock Test | Megha Quiz App"
-          : "Practice Mode | Megha Quiz App";
-
-        const cachedAnswers = localStorage.getItem(`userAnswers_${paperId}`);
-        const cachedBookmarks = localStorage.getItem(`bookmarks_${paperId}`);
-        if (cachedAnswers) setUserAnswers(JSON.parse(cachedAnswers));
-        if (cachedBookmarks) setBookmarks(JSON.parse(cachedBookmarks));
-
+        // 🌟 2. START ENGINE RUNTIME CONSTANTS
+        setTimeRemaining(totalSecondsAllowed);
         startTimeRef.current = Date.now(); // Start precision timer counter
       } catch (err) {
         console.error("API Retrieval Failure:", err);
@@ -136,7 +182,8 @@ const QuizEngine = () => {
     };
 
     fetchExamModuleData();
-  }, [backendUrl, paperId, quizMode, navigate]);
+    // Include currentAffairsId inside dependency matrix array mapping
+  }, [backendUrl, paperId, currentAffairsId, quizMode, navigate]);
 
   // COUNTDOWN TEST CLOCK CONTROLLER (MOCK EXCLUSIVE)
   // ==========================================================================
@@ -248,7 +295,7 @@ const QuizEngine = () => {
     const finalScoreCalculated = correct * 2; // 2 Marks per item reference
     const maxPossibleMarks = questions.length * 2;
 
-    setResultsData({
+    const finalResults = {
       total: questions.length,
       correct,
       wrong,
@@ -257,32 +304,48 @@ const QuizEngine = () => {
       score: finalScoreCalculated,
       totalMarks: maxPossibleMarks,
       timeTakenString: `${spentMins} mins ${spentSecs} secs`,
-    });
+    };
 
+    setResultsData(finalResults);
     setIsSubmitted(true);
     setShowResultsSection(true);
 
-    // Clean browser performance local storage cache keys upon clean submit actions
-    localStorage.removeItem(`userAnswers_${paperId}`);
+    // 🌟 BRANCH CACHE FLUSH: Clean the correct isolated storage parameters
+    if (currentAffairsId) {
+      localStorage.removeItem(`userAnswers_ca_${currentAffairsId}`);
+      console.log(
+        "Cleaned localized Current Affairs runtime progress cache keys.",
+      );
+    } else {
+      localStorage.removeItem(`userAnswers_${paperId}`);
+    }
 
     try {
       const targetUrl = `${backendUrl}/api/quiz/leaderboard/submit`.replace(
         /([^:]\/)\/+/g,
         "$1",
       );
+
+      // 🌟 FIXED PAYLOAD: Explicitly send both variables and the correct quiz type to the controller!
       await axios.post(
         targetUrl,
         {
           userId: userData?._id || "guest",
-          paperId,
+          paperId: currentAffairsId ? null : paperId,
+          currentAffairsId: currentAffairsId || null,
+          quizType: currentAffairsId ? "currentAffairs" : "regularPaper",
           score: finalScoreCalculated,
           totalQuestions: questions.length,
           accuracy,
+          mode: quizMode || "practice",
         },
         { withCredentials: true },
       );
+      console.log(
+        "⚡ Quiz history record saved successfully to MongoDB Atlas!",
+      );
     } catch (err) {
-      console.error("Leaderboard transmission dropped:", err);
+      console.error("Leaderboard/History transmission dropped:", err);
     }
   };
 
@@ -292,7 +355,7 @@ const QuizEngine = () => {
       <div className="quiz-loading-container">Loading engine modules...</div>
     );
 
-  // 🌟 INTERCEPT MOUNT: If user hits submit, cleanly skip standard questions block and switch viewport focus to premium results component!
+  // 🌟 INTERCEPT MOUNT: Switch viewport focus to premium results component!
   if (isSubmitted) {
     return (
       <QuizSummary
