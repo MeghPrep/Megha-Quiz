@@ -3,6 +3,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { AppContext } from "../context/AppContext.jsx";
 import { PlusCircle, Layers, HelpCircle, Link2 } from "lucide-react";
+import "../assets/AdminPanel.css";
+
 
 function AdminPanel() {
   const { backendUrl, userId } = useContext(AppContext);
