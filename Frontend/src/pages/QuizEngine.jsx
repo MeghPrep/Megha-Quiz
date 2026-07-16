@@ -491,7 +491,7 @@ const QuizEngine = () => {
                   marginBottom: "12px",
                 }}
               >
-                📚 Section: {activeQuestion.sectionTitle}
+                Directions {activeQuestion.sectionTitle}
               </div>
             )}
             <div className="question-header">
@@ -510,7 +510,9 @@ const QuizEngine = () => {
             {/* FIXED SECTION BELOW */}
             <div
               id="questionText"
-              dangerouslySetInnerHTML={{ __html: activeQuestion?.question || "" }}
+              dangerouslySetInnerHTML={{
+                __html: activeQuestion?.question || "",
+              }}
             />
 
             {activeQuestion?.questionImage && (

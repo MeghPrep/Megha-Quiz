@@ -3179,3 +3179,130 @@ body {
 .exams-column .flex-spinner-centered {
   min-height: 150px; /* Shorter heights fit nicer inside side panels */
 }
+
+/* Expand layout from split-screen to cohesive stack */
+.dashboard-split-grid {
+  display: block !important; /* Disables side by side layout grid mapping */
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.full-width-accordian {
+  width: 100% !important;
+}
+
+/* Structural Accordian Wrapper */
+.recruitment-interactive-container {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  background-color: #ffffff;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.recruitment-interactive-container.active {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+}
+
+/* Reset base card box styles to run inline smoothly */
+.exam-selection-card {
+  border: none !important;
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+  background-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.arrow-icon {
+  transition: transform 0.2s ease;
+}
+
+.arrow-rotated {
+  transform: rotate(90deg);
+  color: #3b82f6;
+}
+
+/* 🌟 Inline Dropdown Container Styling Rules */
+.unified-paper-dropdown-panel {
+  background-color: #f8fafc;
+  border-top: 1px solid #edf2f7;
+  padding: 1.25rem;
+}
+
+.papers-inline-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.inline-paper-row-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.paper-heading-specs h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.paper-heading-specs p {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.spinner-container-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.animated-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty-papers-prompt {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Tablet & Mobile responsive fallback adjustments */
+@media (max-width: 768px) {
+  .inline-paper-row-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .inline-paper-row-card .action-buttons-row {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .inline-paper-row-card .btn-action {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}

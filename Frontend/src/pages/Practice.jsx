@@ -119,239 +119,125 @@ function Practice() {
           ))}
         </div>
 
-        <div className="dashboard-split-grid">
-          {/* STEP 2: AVAILABLE RECRUITMENTS */}
-          <div className="exams-column">
-            <h2>
-              <GraduationCap size={20} /> Available Recruitment (
-              {activeCategory.split("-")[0].toUpperCase()})
-            </h2>
-            <div className="exams-list-container">
-              {recruitmentLoading ? (
-                <div className="flex-spinner-centered">
-                  <Loader2 className="spinner-icon large" size={36} />
-                  <p className="loading-text">Loading recruitments...</p>
-                </div>
-              ) : recruitments.length > 0 ? (
-                recruitments.map((job) => (
-                  <React.Fragment key={job._id}>
-                    <div
-                      className={`exam-selection-card ${
-                        selectedRecruitment?._id === job._id ? "selected" : ""
-                      }`}
-                      onClick={() => {
-                        handleRecruitmentSelect(job);
-                        if (window.innerWidth <= 768) {
-                          setExpandedRecruitment(
-                            expandedRecruitment === job._id ? null : job._id,
-                          );
-                        }
-                      }}
-                    >
-                      <div>
-                        <h3>{job.postName}</h3>
-                        <p>{job.department || "No department specified"}</p>
+<div className="exams-column full-width-accordian">
+  <h2>
+    <GraduationCap size={20} /> Available Recruitment ({activeCategory.split("-")[0].toUpperCase()})
+  </h2>
+  <div className="exams-list-container">
+    {recruitmentLoading ? (
+      <div className="flex-spinner-centered">
+        <Loader2 className="spinner-icon large" size={36} />
+        <p className="loading-text">Loading recruitments...</p>
+      </div>
+    ) : recruitments.length > 0 ? (
+      recruitments.map((job) => {
+        const isExpanded = expandedRecruitment === job._id;
 
-                        {job.advertisementYear && (
-                          <span className="text-xs opacity-60">
-                            Year: {job.advertisementYear}
-                          </span>
-                        )}
-                      </div>
-                      <ChevronRight size={18} className="arrow-icon" />
-                    </div>
-
-                    {/* Mobile dropdown goes here */}
-                    {expandedRecruitment === job._id && (
-                      <div className="mobile-paper-dropdown">
-                        {papersLoading ? (
-                          <div className="spinner-container">
-                            <Loader2 className="spinner-icon" size={20} />
-                            <span className="spinner-text">
-                              Loading Papers....
-                            </span>
-                          </div>
-                        ) : papers.length > 0 ? (
-                          papers.map((paper) => {
-                            const displayYear = paper.examDate
-                              ? new Date(paper.examDate).getFullYear()
-                              : "N/A";
-
-                            return (
-                              <div
-                                key={paper._id}
-                                className="mobile-paper-card"
-                              >
-                                <h4>{paper.paperTitle}</h4>
-
-                                <p>
-                                  {paper.totalQuestions} Questions •{" "}
-                                  {displayYear}
-                                </p>
-
-                                <div className="action-buttons-row">
-                                  <button
-                                    className="btn-action practice-mode-btn"
-                                    onClick={() =>
-                                      navigate(
-                                        `/quiz?mode=practice&paperId=${paper._id}`,
-                                      )
-                                    }
-                                  >
-                                    Practice
-                                  </button>
-
-                                  <button
-                                    className="btn-action mock-mode-btn"
-                                    onClick={() =>
-                                      navigate(
-                                        `/quiz?mode=mock&paperId=${paper._id}`,
-                                      )
-                                    }
-                                  >
-                                    Mock
-                                  </button>
-
-                                  {paper.pdf && (
-                                    <a
-                                      href={paper.pdf}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="btn-action pdf-download-btn"
-                                    >
-                                      PDF
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <p>No papers available.</p>
-                        )}
-                      </div>
-                    )}
-                  </React.Fragment>
-                ))
-              ) : (
-                <p className="empty-prompt">
-                  No active Recruitment configured for this Authority yet.
-                </p>
-              )}
+        return (
+          <div key={job._id} className={`recruitment-interactive-container ${isExpanded ? "active" : ""}`}>
+            {/* THE CLICKABLE HEAD CARD TRIGGER ROW */}
+            <div
+              className={`exam-selection-card ${isExpanded ? "selected" : ""}`}
+              onClick={() => {
+                handleRecruitmentSelect(job);
+                setExpandedRecruitment(isExpanded ? null : job._id);
+              }}
+            >
+              <div>
+                <h3>{job.postName}</h3>
+                <p>{job.department || "No department specified"}</p>
+                {job.advertisementYear && (
+                  <span className="text-xs opacity-60">
+                    Year: {job.advertisementYear}
+                  </span>
+                )}
+              </div>
+              <ChevronRight size={18} className={`arrow-icon ${isExpanded ? "arrow-rotated" : ""}`} />
             </div>
-          </div>
 
-          {/* STEP 3: EXAM PAPERS (SYNCED WITH NEW MODEL FIELDS) */}
-          <div className="topics-column">
-            <h2>
-              <BookOpen size={20} /> Exam Papers & Subjects
-            </h2>
+            {/* UNIFIED DROP-DOWN PANEL FOR BOTH MOBILE AND DESKTOP */}
+            {isExpanded && (
+              <div className="unified-paper-dropdown-panel">
+                {papersLoading ? (
+                  <div className="spinner-container-inline">
+                    <Loader2 className="spinner-icon animated-spin" size={20} />
+                    <span className="spinner-text">Loading Booklet Layer....</span>
+                  </div>
+                ) : papers.length > 0 ? (
+                  <div className="papers-inline-grid">
+                    {papers.map((paper) => {
+                      const displayYear = paper.examDate
+                        ? new Date(paper.examDate).getFullYear()
+                        : "N/A";
 
-            {!selectedRecruitment ? (
-              <div className="placeholder-info-box">
-                <LayoutGrid size={32} />
-                <p>
-                  Please select an exam from the left panel to display available
-                  quiz modules.
-                </p>
-              </div>
-            ) : papersLoading ? (
-              <div className="flex-spinner-centered">
-                <Loader2 className="spinner-icon large" size={36} />
-                <p className="loading-text">
-                  Fetching papers from Atlas database...
-                </p>
-              </div>
-            ) : (
-              <div className="topics-grid-layout">
-                {papers.length > 0 ? (
-                  papers.map((paper) => {
-                    // Safety check to safely parse the year directly out of the Date field
-                    const displayYear = paper.examDate
-                      ? new Date(paper.examDate).getFullYear()
-                      : "N/A";
+                      return (
+                        <div key={paper._id} className="inline-paper-row-card">
+                          <div className="paper-heading-specs">
+                            <h4>{paper.paperTitle}</h4>
+                            <p>
+                              Questions: <strong>{paper.totalQuestions || 0}</strong> MCQs | 
+                              Marks: <strong>{paper.totalMarks || 0}</strong> | 
+                              Year: <strong>{displayYear}</strong>
+                            </p>
+                          </div>
 
-                    return (
-                      <div key={paper._id} className="topic-launch-card">
-                        {/* ✅ Changed from paper.title to paper.paperTitle */}
-                        <h3>{paper.paperTitle}</h3>
-                        <p>
-                          Questions:{" "}
-                          <strong>{paper.totalQuestions || 0}</strong> MCQs |
-                          Year: <strong>{displayYear}</strong>
-                        </p>
-
-                        <div className="action-buttons-row">
-                          {/* BUTTON 1: PRACTICE MODE */}
-                          <button
-                            className="btn-action practice-mode-btn"
-                            onClick={() => {
-                              localStorage.removeItem(
-                                `userAnswers_${paper._id}`,
-                              );
-                              localStorage.removeItem(`bookmarks_${paper._id}`);
-                              navigate(
-                                `/quiz?mode=practice&paperId=${paper._id}`,
-                              );
-                            }}
-                          >
-                            Practice Mode
-                          </button>
-
-                          {/* BUTTON 2: MOCK TEST */}
-                          <button
-                            className="btn-action mock-mode-btn"
-                            onClick={() => {
-                              localStorage.removeItem(
-                                `userAnswers_${paper._id}`,
-                              );
-                              localStorage.removeItem(`bookmarks_${paper._id}`);
-                              navigate(`/quiz?mode=mock&paperId=${paper._id}`);
-                            }}
-                          >
-                            Mock Test
-                          </button>
-
-                          {/* 📄 VIEW OFFICIAL PDF BOOKLET BUTTON */}
-                          {/* Evaluates if a link string exists and maps it directly to the anchor href */}
-                          {paper.pdf && (
-                            <a
-                              href={paper.pdf} // Loads the direct MPSC server link straight out of your database document
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn-action pdf-download-btn"
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "10px 14px",
-                                backgroundColor: "#f3f4f6",
-                                color: "#374151",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "8px",
-                                fontSize: "13px",
-                                fontWeight: "500",
-                                textDecoration: "none",
-                                cursor: "pointer",
-                                transition: "all 0.15s",
+                          <div className="action-buttons-row">
+                            {/* BUTTON 1: PRACTICE MODE WITH CACHE FLUSH */}
+                            <button
+                              className="btn-action practice-mode-btn"
+                              onClick={() => {
+                                localStorage.removeItem(`userAnswers_${paper._id}`);
+                                localStorage.removeItem(`bookmarks_${paper._id}`);
+                                navigate(`/quiz?mode=practice&paperId=${paper._id}`);
                               }}
                             >
-                              📄 View PDF
-                            </a>
-                          )}
+                              Practice Mode
+                            </button>
+
+                            {/* BUTTON 2: MOCK TEST WITH CACHE FLUSH */}
+                            <button
+                              className="btn-action mock-mode-btn"
+                              onClick={() => {
+                                localStorage.removeItem(`userAnswers_${paper._id}`);
+                                localStorage.removeItem(`bookmarks_${paper._id}`);
+                                navigate(`/quiz?mode=mock&paperId=${paper._id}`);
+                              }}
+                            >
+                              Mock Test
+                            </button>
+
+                            {/* BUTTON 3: PDF EMBED ATTACHMENT LINK */}
+                            {paper.pdf && (
+                              <a
+                                href={paper.pdf}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-action pdf-download-btn"
+                              >
+                                PDF
+                              </a>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </div>
                 ) : (
-                  <p className="empty-prompt">
-                    No question papers uploaded for this recruitment model yet.
-                  </p>
+                  <p className="empty-papers-prompt">No examination booklets linked to this recruitment category profile yet.</p>
                 )}
               </div>
             )}
           </div>
-        </div>
+        );
+      })
+    ) : (
+      <p className="empty-prompt">
+        No active Recruitment configured for this Authority yet.
+      </p>
+    )}
+  </div>
+</div>
+
       </div>
     </div>
   );
