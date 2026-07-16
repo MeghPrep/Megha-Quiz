@@ -1,0 +1,294 @@
+/* ==========================================================================
+   MEGHA QUIZ - ADMIN PANEL STYLESHEET
+   ========================================================================== */
+
+.admin-panel-layout-wrapper {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #1f2937;
+  background-color: #f9fafb;
+}
+
+/* Hero Banner */
+.admin-hero-banner {
+  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+  color: #ffffff;
+  padding: 2.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.admin-hero-banner h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
+}
+
+.admin-hero-banner p {
+  font-size: 1.1rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* Layout Container */
+.admin-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Card Wrapper Sections */
+.admin-card-section {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.admin-card-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #f3f4f6;
+  padding-bottom: 0.75rem;
+}
+
+.admin-card-section h2 svg {
+  color: #4f46e5;
+}
+
+/* Selection Cascading Dropdown Grid */
+.admin-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Structural Form Inputs */
+.admin-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-input-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.admin-input-group select,
+.admin-input-group input[type="text"],
+.admin-input-group input[type="number"],
+.admin-input-group input[type="url"],
+.admin-input-group input[type="date"],
+.admin-input-group textarea,
+.inline-add-topic-form-expanded input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #111827;
+  background-color: #ffffff;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-input-group select:focus,
+.admin-input-group input:focus,
+.admin-input-group textarea:focus,
+.inline-add-topic-form-expanded input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.admin-input-group select:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Flex Row for Paper Selector + Toggle Button */
+.topic-select-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.toggle-creation-btn {
+  white-space: nowrap;
+  padding: 0 1rem;
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.toggle-creation-btn:hover:not(:disabled) {
+  background-color: #e5e7eb;
+}
+
+.toggle-creation-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Inline Booklet Creation Form Block */
+.inline-add-topic-form-expanded {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  border: 1px dashed #c7d2fe;
+  border-radius: 8px;
+}
+
+.inline-add-topic-form-expanded h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #3730a3;
+}
+
+/* Input Grids (Options, MCQ parameters) */
+.options-input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+
+/* Inline Checkbox Center Alignment Mapping */
+.checkbox-holder {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  height: 100%;
+  margin-top: 1rem;
+}
+
+.checkbox-holder input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+  accent-color: #4f46e5;
+}
+
+/* Full Width Fields (Textareas, Question Prompt stems) */
+.full-width-field {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.full-width-field textarea {
+  resize: vertical;
+}
+
+/* Typography Step Segments inside Main Input Forms */
+.input-forms-block h2:not(:first-of-type) {
+  margin-top: 2rem;
+}
+
+/* Structural Buttons */
+.btn-admin-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #4f46e5;
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  margin-top: 1rem;
+}
+
+.btn-admin-submit:hover {
+  background-color: #4338ca;
+}
+
+.master-upload-btn {
+  width: 100%;
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  margin-top: 1rem;
+}
+
+.master-upload-btn:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.master-upload-btn:active:not(:disabled) {
+  transform: scale(0.995);
+}
+
+.master-upload-btn:disabled {
+  background-color: #9ca3af;
+  color: #e5e7eb;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN INTERFACES
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .admin-panel-layout-wrapper {
+    margin: 1rem auto;
+  }
+  
+  .admin-hero-banner {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-hero-banner h1 {
+    font-size: 1.75rem;
+  }
+
+  .admin-card-section {
+    padding: 1.25rem;
+  }
+
+  .options-input-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+  
+  .checkbox-holder {
+    margin-top: 0;
+  }
+}
+
