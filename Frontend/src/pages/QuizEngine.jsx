@@ -477,54 +477,52 @@ const QuizEngine = () => {
           </div>
 
           <article className="question-card">
-<article className="question-card">
-  {activeQuestion?.sectionTitle && (
-    <div
-      className="section-title-badge"
-      style={{
-        backgroundColor: "#eff6ff",
-        color: "#1e40af",
-        padding: "6px 12px",
-        borderRadius: "6px",
-        display: "inline-block",
-        fontSize: "13px",
-        fontWeight: "600",
-        marginBottom: "12px",
-      }}
-    >
-      📚 Section: {activeQuestion.sectionTitle}
-    </div>
-  )}
-  <div className="question-header">
-    <h2 id="questionTitle">Question {currentQuestionIndex + 1}</h2>
-    {isPracticeMode() && (
-      <button
-        id="bookmarkBtn"
-        className={isQuestionBookmarked ? "bookmarked" : ""}
-        onClick={handleToggleBookmark}
-      >
-        {isQuestionBookmarked ? "★ Bookmarked" : "☆ Bookmark"}
-      </button>
-    )}
-  </div>
+            {activeQuestion?.sectionTitle && (
+              <div
+                className="section-title-badge"
+                style={{
+                  backgroundColor: "#eff6ff",
+                  color: "#1e40af",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  display: "inline-block",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  marginBottom: "12px",
+                }}
+              >
+                📚 Section: {activeQuestion.sectionTitle}
+              </div>
+            )}
+            <div className="question-header">
+              <h2 id="questionTitle">Question {currentQuestionIndex + 1}</h2>
+              {isPracticeMode() && (
+                <button
+                  id="bookmarkBtn"
+                  className={isQuestionBookmarked ? "bookmarked" : ""}
+                  onClick={handleToggleBookmark}
+                >
+                  {isQuestionBookmarked ? "★ Bookmarked" : "☆ Bookmark"}
+                </button>
+              )}
+            </div>
 
-  {/* FIXED SECTION BELOW */}
-  <div 
-    id="questionText"
-    dangerouslySetInnerHTML={{ __html: activeQuestion?.question || "" }} 
-  />
+            {/* FIXED SECTION BELOW */}
+            <div
+              id="questionText"
+              dangerouslySetInnerHTML={{ __html: activeQuestion?.question || "" }}
+            />
 
-  {activeQuestion?.questionImage && (
-    <div className="question-image-container">
-      <img
-        id="questionImage"
-        src={activeQuestion.questionImage}
-        alt="Figure Model Graph Reference"
-      />
-    </div>
-  )}
-</article>
-
+            {activeQuestion?.questionImage && (
+              <div className="question-image-container">
+                <img
+                  id="questionImage"
+                  src={activeQuestion.questionImage}
+                  alt="Figure Model Graph Reference"
+                />
+              </div>
+            )}
+          </article>
 
           {/* SELECTION BUTTON OPTIONS */}
           <section id="optionsContainer" className="options-section">
