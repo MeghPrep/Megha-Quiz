@@ -1,10 +1,10 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useContext } from "react"; // 🌟 Added useContext
 import { ToastContainer } from "react-toastify";
 import CardSkeleton from "./components/CardSkeleton";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Contact from "./pages/Contact";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom"; // 🌟 Added Navigate
 import Auth from "./pages/Auth";
 import About from "./pages/About";
 import QuizEngine from "./pages/QuizEngine";
@@ -14,6 +14,8 @@ import AdminPanel from "./pages/AdminPanel.jsx";
 import QuizSummary from "./pages/QuizSummary.jsx";
 import CurrentAffairsTimeline from "./components/current-affairs/CurrentAffairsTimeline.jsx";
 import CurrentAffairsMagazine from "./components/current-affairs/CurrentAffairsMagazine.jsx";
+import { useAuth } from "@clerk/clerk-react"; // 🌟 Added to track Clerk load states
+import { AppContext } from "./context/AppContext"; // 🌟 Imported your AppContext
 
 // 🌟 IMPORT YOUR NEW PERFORMANCE WORKSPACE
 import StudentDashboard from "./pages/StudentDashboard.jsx";
@@ -28,6 +30,21 @@ const SkeletonLoader = () => (
     <CardSkeleton />
   </div>
 );
+
+// 🌟 INLINE ADMIN GUARD COMPONENT
+// This checks the "isAdmin" flag we exposed in your AppContext
+function AdminProtectedRoute({ children }) {
+  const { isAdmin } = useContext(AppContext);
+  const { isLoaded } = useAuth();
+
+  // Wait until Clerk completes loading session states
+  if (!isLoaded) {
+    return <div style={{ padding: "40px", textAlign: "center", fontWeight: "600" }}>Verifying Admin Access...</div>;
+  }
+
+  // If they are the admin, let them through; otherwise bounce them back home
+  return isAdmin ? children : <Navigate to="/" replace />;
+}
 
 // 1. Layout component that reads the current active URL route path
 function AppLayout() {
@@ -59,7 +76,17 @@ function AppLayout() {
 
           <Route path="/about" element={<About />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/admin" element={<AdminPanel />} />
+          
+          {/* 🔒 STRICT EMAIL-LOCK GUARD APPLIED BELOW */}
+          <Route 
+            path="/admin" 
+            element={
+              <AdminProtectedRoute>
+                <AdminPanel />
+              </AdminProtectedRoute>
+            } 
+          />
+          
           <Route path="/test-summary" element={<QuizSummary />} />
           <Route path="/current-affairs" element={<CurrentAffairsTimeline />} />
           <Route
