@@ -42,14 +42,14 @@ const Auth = () => {
           routing="path"
           path="/signup"
           signInUrl="/login"
-          forceRedirectUrl="/practice"
+          forceRedirectUrl="/admin"
         />
       ) : (
         <SignIn
           routing="path"
           path="/login"
           signUpUrl="/signup"
-          forceRedirectUrl="/practice"
+          forceRedirectUrl="/admin"
         />
       )}
     </div>
