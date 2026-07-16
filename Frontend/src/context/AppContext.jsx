@@ -1,23 +1,25 @@
 import { createContext, useState, useEffect } from "react";
-import { useAuth } from "@clerk/clerk-react"; // 🌟 1. Import Clerk's authentication state hook
+import { useAuth, useUser } from "@clerk/clerk-react"; // 🌟 Added useUser hook
 
 export const AppContext = createContext();
 
 export const AppContextProvider = (props) => {
-  // FIX: Tries a local development override variable first, then defaults to production
   const backendUrl =
     window.location.hostname === "localhost"
       ? "http://localhost:3000"
       : "https://megha-quiz-87mn.vercel.app";
 
-  const { isSignedIn, userId } = useAuth(); // 🌟 2. Extract live session state from Clerk
+  const { isSignedIn, userId } = useAuth();
+  const { user } = useUser(); // 🌟 Extract profile details like email addresses
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(false);
 
-  // 🌟 3. Watch for changes in Clerk session and update global isLoggedIn state instantly
   useEffect(() => {
     setIsLoggedIn(!!isSignedIn);
   }, [isSignedIn]);
+
+  // Check if the currently logged-in user is your specific admin email
+  const isAdmin = isSignedIn && user?.primaryEmailAddress?.emailAddress === "meghaquiz666@gmail.com";
 
   const value = {
     backendUrl,
@@ -25,7 +27,9 @@ export const AppContextProvider = (props) => {
     setIsLoggedIn,
     userData,
     setUserData,
-    userId, // 🌟 4. Expose the user ID to the rest of the application
+    userId,
+    user,   // Expose the raw user profile
+    isAdmin, // 🌟 Expose a clean boolean for simple frontend checks
   };
 
   return (
