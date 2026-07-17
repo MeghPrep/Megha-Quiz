@@ -61,7 +61,7 @@ const { getToken, isLoaded, isSignedIn } = useAuth();
   };
 
   fetchDashboardStats();
-}, [backendUrl, getToken]);
+}, [backendUrl, getToken, isLoaded, isSignedIn]);
 
   if (loading) {
     return (
