@@ -11,11 +11,13 @@ import {
   Badge,
 } from "lucide-react";
 import { AppContext } from "../context/AppContext.jsx";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import QuizSummary from "./QuizSummary.jsx"; // 🌟 Import your premium summary layout page component
 
 const QuizEngine = () => {
   const { user, isLoaded } = useUser();
+const { getToken } = useAuth();
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { backendUrl, userData } = useContext(AppContext);
@@ -327,27 +329,25 @@ const QuizEngine = () => {
       );
 
       // 🌟 FIXED PAYLOAD: Explicitly send both variables and the correct quiz type to the controller!
-      await axios.post(
-        targetUrl,
-        {
-          userId: userData?._id || "guest",
-          paperId: currentAffairsId ? null : paperId,
-          currentAffairsId: currentAffairsId || null,
-          quizType: currentAffairsId ? "currentAffairs" : "regularPaper",
-          score: finalScoreCalculated,
-          totalQuestions: questions.length,
-          accuracy,
-          mode: quizMode || "practice",
-        },
-        { withCredentials: true },
-      );
-      console.log(
-        "⚡ Quiz history record saved successfully to MongoDB Atlas!",
-      );
-    } catch (err) {
-      console.error("Leaderboard/History transmission dropped:", err);
-    }
-  };
+const token = await getToken();
+
+await axios.post(
+  targetUrl,
+  {
+    paperId: currentAffairsId ? null : paperId,
+    currentAffairsId: currentAffairsId || null,
+    quizType: currentAffairsId ? "currentAffairs" : "regularPaper",
+    score: finalScoreCalculated,
+    totalQuestions: questions.length,
+    accuracy,
+    mode: quizMode || "practice",
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  },
+);
 
   // Safe checks for layout references
   if (isLoading)
