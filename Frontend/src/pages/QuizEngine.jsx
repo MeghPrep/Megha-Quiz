@@ -590,15 +590,17 @@ const QuizEngine = () => {
           {isPracticeMode() &&
             activeUserSelection !== undefined &&
             activeQuestion?.solution && (
-              <section
-                id="solutionContainer"
-                className="solution-container"
-                style={{ display: "block", marginTop: "20px" }}
-              >
-                <h3>Solution & Explanation</h3>
-                <p>{activeQuestion.solution}</p>
-              </section>
-            )}
+  <section
+    id="solutionContainer"
+    className="solution-container"
+    style={{ display: "block", marginTop: "20px" }}
+  >
+    <h3>Solution & Explanation</h3>
+    {/* Replaced standard curly braces with dangerouslySetInnerHTML */}
+    <p dangerouslySetInnerHTML={{ __html: activeQuestion.solution }} />
+  </section>
+)
+}
 
           <div
             className="question-navigation"
