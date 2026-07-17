@@ -16,7 +16,7 @@ import QuizSummary from "./QuizSummary.jsx"; // 🌟 Import your premium summary
 
 const QuizEngine = () => {
   const { user, isLoaded } = useUser();
-const { getToken } = useAuth();
+  const { getToken } = useAuth();
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -328,26 +328,39 @@ const { getToken } = useAuth();
         "$1",
       );
 
-      // 🌟 FIXED PAYLOAD: Explicitly send both variables and the correct quiz type to the controller!
-const token = await getToken();
+      // 🌟 Get Clerk token and submit to backend
+      const token = await getToken();
 
-await axios.post(
-  targetUrl,
-  {
-    paperId: currentAffairsId ? null : paperId,
-    currentAffairsId: currentAffairsId || null,
-    quizType: currentAffairsId ? "currentAffairs" : "regularPaper",
-    score: finalScoreCalculated,
-    totalQuestions: questions.length,
-    accuracy,
-    mode: quizMode || "practice",
-  },
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  },
-);
+      if (!token) {
+        console.warn("⚠️ Clerk token unavailable - using guest mode");
+      }
+
+      await axios.post(
+        targetUrl,
+        {
+          paperId: currentAffairsId ? null : paperId,
+          currentAffairsId: currentAffairsId || null,
+          quizType: currentAffairsId ? "currentAffairs" : "regularPaper",
+          score: finalScoreCalculated,
+          totalQuestions: questions.length,
+          accuracy,
+          mode: quizMode || "practice",
+        },
+        {
+          headers: token ? {
+            Authorization: `Bearer ${token}`,
+          } : {},
+        },
+      );
+
+      console.log(
+        "⚡ Quiz history record saved successfully to MongoDB Atlas!",
+      );
+    } catch (err) {
+      console.error("Leaderboard/History transmission dropped:", err);
+      // Continue anyway - don't block UI
+    }
+  };
 
   // Safe checks for layout references
   if (isLoading)
