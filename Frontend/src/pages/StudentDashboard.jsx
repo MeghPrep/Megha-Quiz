@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { AppContext } from "../context/AppContext.jsx";
 import {
@@ -17,27 +18,50 @@ import "../assets/studentDashboard.css";
 
 export default function StudentDashboard() {
   const { backendUrl } = useContext(AppContext);
+const { getToken, isLoaded, isSignedIn } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    axios
-      .get(`/api/quiz/student-stats`, { withCredentials: true })
-      .then((res) => {
-        if (res.data.success) {
-          setData(res.data);
-        } else {
-          setError(res.data.message || "Failed to load performance metrics.");
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Dashboard profile analytical query failure:", err);
-        setError("Could not establish communication with server nodes.");
-        setLoading(false);
-      });
-  }, []);
+  if (!isLoaded || !isSignedIn) return;
+  const fetchDashboardStats = async () => {
+    try {
+      // Step 1: Get the Clerk authentication token
+      const token = await getToken();
+
+      // Step 2: Send the token to the backend
+      const res = await axios.get(
+        `${backendUrl}/api/quiz/student-stats`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      // Step 3: Store the dashboard data
+      if (res.data.success) {
+        setData(res.data);
+      } else {
+        setError(
+          res.data.message || "Failed to load performance metrics.",
+        );
+      }
+    } catch (err) {
+      console.error(
+        "Dashboard profile analytical query failure:",
+        err,
+      );
+
+      setError("Could not establish communication with server nodes.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchDashboardStats();
+}, [backendUrl, getToken]);
 
   if (loading) {
     return (
